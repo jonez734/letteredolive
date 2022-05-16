@@ -12,40 +12,25 @@ import bbsengine5 as bbsengine
 # @see https://pymotw.com/3/importlib/
 #
 
-def setarea(args, left):
+def setarea(args, left, stack=False):
   def right():
     currentmember = bbsengine.getcurrentmember(args)
     if currentmember is None:
       return ""
     rightbuf = "| %s | %s" % (currentmember["name"], bbsengine.pluralize(currentmember["credits"], "credit", "credits"))
+    if args.debug is True:
+      rightbuf += " | debug"
     return rightbuf
-  bbsengine.setarea(left, right)
+  bbsengine.setarea(left, right, stack)
 
-def callprgmethod(args, path="main", **kwargs):
-  x = path.split(".")
-  m = x[0]
-  if len(x) == 1:
-    f = "main"
-  else:
-    f = x[1]
-
-  a = importlib.import_module(m)
-#  ttyio.echo("a=%r" % (a), interpet=False, level="debug")
-  res = eval("a.%s" % (f), {"a": a})
-  if callable(res) is True:
-    res(args, **kwargs)
-  else:
-    ttyio.echo("%r is not callable" % (path), level="error")
-  return
-  
-def runprg(args, **kwargs):
+#def runprg(args, **kwargs):
 #  print("runprg.100: trace")
 #  parents = kwargs["parents"] if "parents" in kwargs else []
-  command = kwargs["command"] if "command" in kwargs else None
-  prg = command["prg"] if "prg" in command else None
-  if command is None:
-    return None
-  return bbsengine.runcallback(args, prg, **kwargs)  # callprgmethod(args, prg, **kwargs)
+#  command = kwargs["command"] if "command" in kwargs else None
+#  prg = command["prg"] if "prg" in command else None
+#  if command is None:
+#    return None
+# return bbsengine.runcallback(args, prg, **kwargs)  # callprgmethod(args, prg, **kwargs)
 #  ttyio.echo("runprg.120: module=%r" % (module))
 #  if prg is None:
 #    return None
@@ -65,33 +50,19 @@ def runprg(args, **kwargs):
 #    ttyio.echo("programming error", level="error")
 #  return
 
-def shellout(args, **kwargs):
-  if "command" in kwargs:
-#    ttyio.echo("shellout.100: command=%r" % (kwargs["command"]), level="debug", interpret=False)
-    if "shell" in kwargs["command"]:
-      shell = kwargs["command"]["shell"]
-      ttyio.echo("shellout.120: shell=%r" % (shell), level="debug")
-      setarea(args, shell)
-      res = os.system(shell)
-      bbsengine.poparea()
-      return res
-    else:
-      ttyio.echo("command does not have a 'shell' key. failed.", level="error")
-      return
-
-commands = (
-    {"command": "teos",     "callback": runprg, "prg": "teos",     "help": "sig view"},
-    {"command": "socrates", "callback": runprg, "prg": "socrates", "help": "forums"},
-    {"command": "ogun",     "callback": runprg, "prg": "ogun",     "help": "link database"},
-    {"command": "glossary", "callback": runprg, "prg": "glossary", "help": "glossary of terms"},
-    {"command": "empyre",   "callback": runprg, "prg": "empyre",   "help": "run the game empyre"},
-    {"command": "achilles", "callback": runprg, "prg": "achilles", "help": "achilles: a study of msg and related flavor enhancers"},
-    {"command": "engine",   "callback": runprg, "prg": "engine",   "help": "manage engine (members, sessions, etc)"},
-    {"command": "weather",  "callback": runprg, "prg": "weather",  "help": "weather report"},
-    {"command": "banner",   "callback": runprg, "prg": "banner",   "help": "print short string in large letters"},
-    {"command": "help",     "callback": help},
-    # socrates.addpost()?
-)
+commands = {
+    "teos":     {"prg": "teos",      "help": "sig view"},
+    "socrates": {"prg": "socrates",  "help": "forums"},
+    "ogun":     {"prg": "ogun",      "help": "link database"},
+    "glossary": {"prg": "glossary",  "help": "glossary of terms"},
+    "empyre":   {"prg": "empyre",    "help": "run the game empyre"},
+    "achilles": {"prg": "achilles",  "help": "achilles: a study of msg and related flavor enhancers"},
+    "engine":   {"prg": "engine",    "help": "manage engine (members, sessions, etc)"},
+    "weather":  {"prg": "weather",   "help": "weather report"},
+    "banderole":{"prg": "banderole", "help": "print short string in large letters (banner)"},
+    "banner":   {"prg": "banderole", "help": "alias for banderole"},
+    "testsetarea": {"prg": "testsetarea", "help": "a test program for making sure setarea() works properly"},
+}
 
 # @since 20201125
 class shellCommandCompleter(object):
@@ -101,87 +72,59 @@ class shellCommandCompleter(object):
 
   @classmethod
   def complete(self:object, text:str, state:int):
-#    ttyio.echo("commands=%r", interpret=False)
     vocab = []
-    for c in commands:
-      vocab.append(c["command"])
+    for c in commands.keys():
+      vocab.append(c)
     results = [x for x in vocab if x.startswith(text)] + [None]
     return results[state]
 
 def help():
   maxlen = 0
-  for c in commands:
-    l = len(c["command"])+2
+  for k in commands.keys():
+    l = len(k)+2
     if l > maxlen:
       maxlen = l
 
-  ttyio.echo("help.100: l=%r" % (maxlen), level="debug")
+  ttyio.echo("help.100: maxlen=%r" % (maxlen), level="debug")
   bbsengine.title("shell commands") #, hrcolor="{green}", titlecolor="{bggray}{white}")
-  for c in commands:
-    n = c["command"].ljust(maxlen)
-    if "help" in c:
-      ttyio.echo("{bggray}{white}%s{/bgcolor}{green} %s" % (n, c["help"]))
+  for k, v in commands.items():
+    n = k.ljust(maxlen)
+    if "help" in v:
+      ttyio.echo("{bggray}{white}%s{/bgcolor}{green} %s" % (n, v["help"]))
     else:
       ttyio.echo("{bggray}{white}%s{/bgcolor}{green}" % (n))
   ttyio.echo("{/all}")
   return
 
-def main():
+def main(argparser):
   ttyio.setvariable("engine.areacolor", "{bggray}{white}")
-#  ttyio.echo("{f6:3}{curpos:%d,0}" % (ttyio.getterminalheight()-2))
+  try:
+    args = argparser.parse_args()
+  except SystemExit:
+    pass
 
-  parser = argparse.ArgumentParser(prog="bbs")
-  parser.add_argument("--verbose", default=True, action="store_true", help="use verbose mode")
-  parser.add_argument("--debug", default=False, action="store_true", help="run debug mode")
-  parser.add_argument("--dry-run", dest="dryrun", action="store_true", default=True, help="dry run (no database changes)")
-
-  defaults = {"databasename":"zoidweb5", "databasehost": "localhost", "databaseport":5432, "databaseuser": None, "databasepassword":None}
-  bbsengine.buildargdatabasegroup(parser, defaults)
-
-  subparsers = parser.add_subparsers(dest="command", help='sub-command help')
-  p = subparsers.add_parser('post-add', help='post-add help (socrates)')
-  p.add_argument('--freeze', action="store_true", required=False, default=False, help="marks a post so it cannot accept replies/subnodes")
-  p.add_argument("--eros", action="store_true", required=False, default=False, help="marks a post as 'adult content'")
-  p.add_argument("--draft", action="store_true", required=False, default=True, help="mark the post as 'draft'")
-  p.add_argument("--body", type=argparse.FileType("r"), required=False, help="filename used for body of post")
-  p.add_argument("--title", required=False, action="store", help="title of post")
-
-  p = subparsers.add_parser("post-read-new", help="read new posts")
-  # parser_b.add_argument('--baz', choices='XYZ', help='baz help')
-  p = subparsers.add_parser("link-read-new", help="read new links")
-  
-  args = parser.parse_args()
 #  ttyio.echo("args=%r" % (args), level="debug")
 
+  ttyio.echo("{f6:5}{curpos:%d,0}" % (ttyio.getterminalheight()-5))
   bbsengine.initscreen(bottommargin=1)
-  setarea(args, "the galaxy federation bbs")
 
-  if args.command == "post-add":
-    ttyio.echo("socrates post-add")
-    buf = ["socrates"]
-    for attr in ("databasehost", "databasename", "databaseport", "databaseuser", "databasepassword", "title", "freeze", "eros", "draft", "magic"):
-      if attr in args:
-        buf.append("--%s=%r" % (attr, getattr(args, attr)))
-    buf.append("post-add")
-    for attr in ("freeze", "draft", "eros"):
-      if getattr(args, attr) is True:
-        buf.append("--%s" % (attr))
-    for attr in ("title", "body"):
-      v = getattr(args, attr)
-      if v is not None:
-        buf.append("--%s=%r" % (attr, v))
-    ttyio.echo("buf=%r" % (buf))
-    return
+#  setarea(args, "the galaxy federation bbs", stack=True)
 
   done = False
   while not done:
-    # @todo: handle subcommands as tab-complete
+    # @todo: handle subcommands as tab-complete (@see cmd2)
     # ttyio.echo("args=%r" % (args), level="debug")
 
+    setarea(args, "the galaxy federation bbs", stack=False)
+
     ttyio.setvariable("engine.areacolor", "{bggray}{white}")
-    prompt = "{bggray}{white}%s{/bgcolor}{F6}{green}gf main: {lightgreen}" % (bbsengine.datestamp(format="%c %Z"))
+
+    if args.debug is True:
+      ttyio.echo("bbs.main.200: areastack=%r" % (bbsengine.areastack), level="debug")
+
+    prompt = "{bggray}{white}%s{/bgcolor}{F6}{green}gf main: {lightgreen}" % (bbsengine.datestamp(format="%c"))
+
     try:
-      # ttyio.echo("prompt=%r" % (prompt))
       buf = ttyio.inputstring(prompt, multiple=False, returnseq=False, verify=None, completer=shellCommandCompleter(args), completerdelims=" ")
     except EOFError:
       ttyio.echo("EOF")
@@ -200,25 +143,45 @@ def main():
       done = True
       break
 
-    found = False
     argv = buf.split(" ")
-    for c in commands:
-      command = c["command"]
-      if argv[0] == command:
-        found = True
-        callback = c["callback"]
-        ttyio.echo("bbs.main.200: command=%r callback=%r" % (command, callback), interpret=False)
-        bbsengine.runcallback(args, callback, command=c)
-        break
-    if found is False:
-      ttyio.echo("command not found", level="error")
-    # args = buf.split(" ")
-    # parser.parse_known_args(args) -- this is for global args for the shell
-  # return ttyio.inputstring(prompt, oldvalue, opts=opts, verify=verify, multiple=multiple, completer=sigcompleter(opts), returnseq=True, **kw)
+    if argv[0] not in commands:
+      ttyio.echo("command not found{f6}", level="error")
+      continue
+
+    v = commands[argv[0]]
+    prg = v["prg"]
+    prgargparse = bbsengine.runcallback(args, "%s.buildargs" % (prg))
+    if prgargparse is not None:
+      try:
+        prgargs = prgargparse.parse_args(argv[1:])
+      except SystemExit:
+        continue
+      except argparse.ArgumentError:
+        ttyio.echo("argument error")
+        continue
+
+      ttyio.echo("bbs.main.220: prgargs=%r" % (prgargs), level="debug")
+      done = bbsengine.runcallback(prgargs, "%s.main" % (prg))
+
+#    bbsengine.poparea()
+
+def buildargs(args=None):
+  argparser = argparse.ArgumentParser(prog="bbs")
+  argparser.add_argument("--verbose", default=True, action="store_true", help="use verbose mode")
+  argparser.add_argument("--debug", default=False, action="store_true", help="run debug mode")
+
+  defaults = {"databasename":"zoidweb5", "databasehost": "localhost", "databaseport":5432, "databaseuser": None, "databasepassword":None}
+  bbsengine.buildargdatabasegroup(argparser, defaults)
+
+  return argparser
 
 if __name__ == "__main__":
+
+  argparser = buildargs()
+#  args = argparser.parse_args()
+
   try:
-      main()
+      main(argparser)
   except KeyboardInterrupt:
       ttyio.echo("{/all}{bold}INTR{bold}")
   except EOFError:
