@@ -1,4 +1,5 @@
 == shell (bbs) ==
+===
     - [ ] turn off tab-complete after a command has been entered. remove delims? (@since 20211211)
     - [ ] confirm no bash chars can be entered at the bbs prompt (@since 20211211) @security
     - [x] handle setarea() correctly (@since 20211211) (@done 20211214)
