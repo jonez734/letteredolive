@@ -1,4 +1,6 @@
 import os
+import time
+import locale
 import argparse
 import importlib
 
@@ -51,6 +53,7 @@ def setarea(args, left, stack=False):
 #  return
 
 commands = {
+    "baghdad":  {"prg": "baghdad",   "help": "maintain zoidweb5 sigs"},
     "teos":     {"prg": "teos",      "help": "sig view"},
     "socrates": {"prg": "socrates",  "help": "forums"},
     "ogun":     {"prg": "ogun",      "help": "link database"},
@@ -60,8 +63,16 @@ commands = {
     "engine":   {"prg": "engine",    "help": "manage engine (members, sessions, etc)"},
     "weather":  {"prg": "weather",   "help": "weather report"},
     "banderole":{"prg": "banderole", "help": "print short string in large letters (banner)"},
-    "banner":   {"prg": "banderole", "help": "alias for banderole"},
-    "testsetarea": {"prg": "testsetarea", "help": "a test program for making sure setarea() works properly"},
+#    "banner":   {"prg": "banderole", "help": "alias for banderole"},
+#    "figlet":   {"prg": "banderole",    "help": "advanced 'banner'"},
+    "votingbooth": {"prg": "votingbooth", "help": "vote on various topics"},
+    "vb":          {"prg": "votingbooth", "help": "alias for votingbooth"},
+    "projup":      {"prg": "projup", "help": "add or update a project to projetflow"},
+    "pho":         {"prg": "pho", "help": "lookup phone numbers"},
+    "grepproj":    {"prg": "grepproj", "help": "grep through projects"},
+
+#    "testsetarea": {"prg": "testsetarea", "help": "a test program for making sure setarea() works properly"},
+    "logout":   {"help": "logout of the system"},
 }
 
 # @since 20201125
@@ -96,16 +107,25 @@ def help():
   ttyio.echo("{/all}")
   return
 
-def main(argparser):
-  ttyio.setvariable("engine.areacolor", "{bggray}{white}")
-  try:
-    args = argparser.parse_args()
-  except SystemExit:
-    pass
+def buildargs(args=None):
+  argparser = argparse.ArgumentParser(prog="bbs")
+  argparser.add_argument("--verbose", default=True, action="store_true", help="use verbose mode")
+  argparser.add_argument("--debug", default=False, action="store_true", help="use debug mode")
+
+  defaults = {"databasename":"zoidweb5", "databasehost": "localhost", "databaseport":5432, "databaseuser": None, "databasepassword":None}
+  bbsengine.buildargdatabasegroup(argparser, defaults)
+
+  return argparser
+
+def main(args=None):
+#  ttyio.setvariable("engine.areacolor", "{bggray}{white}")
+
+  locale.setlocale(locale.LC_ALL, "")
+  time.tzset()
 
 #  ttyio.echo("args=%r" % (args), level="debug")
 
-  ttyio.echo("{f6:5}{curpos:%d,0}" % (ttyio.getterminalheight()-5))
+  ttyio.echo("{f6:5}{cursorup:5}") # {curpos:%d,0}" % (ttyio.getterminalheight()-5))
   bbsengine.initscreen(bottommargin=1)
 
 #  setarea(args, "the galaxy federation bbs", stack=True)
@@ -117,12 +137,12 @@ def main(argparser):
 
     setarea(args, "the galaxy federation bbs", stack=False)
 
-    ttyio.setvariable("engine.areacolor", "{bggray}{white}")
+#	ttyio.setvariable("engine.areacolor", "{bggray}{white}")
 
     if args.debug is True:
       ttyio.echo("bbs.main.200: areastack=%r" % (bbsengine.areastack), level="debug")
 
-    prompt = "{bggray}{white}%s{/bgcolor}{F6}{green}gf main: {lightgreen}" % (bbsengine.datestamp(format="%c"))
+    prompt = "{var:engine.areacolor}%s{/bgcolor}{F6}{green}gf main: {lightgreen}" % (bbsengine.datestamp(format="%c"))
 
     try:
       buf = ttyio.inputstring(prompt, multiple=False, returnseq=False, verify=None, completer=shellCommandCompleter(args), completerdelims=" ")
@@ -145,7 +165,7 @@ def main(argparser):
 
     argv = buf.split(" ")
     if argv[0] not in commands:
-      ttyio.echo("command not found{f6}", level="error")
+      ttyio.echo("command not found", level="error")
       continue
 
     v = commands[argv[0]]
@@ -157,31 +177,22 @@ def main(argparser):
       except SystemExit:
         continue
       except argparse.ArgumentError:
-        ttyio.echo("argument error")
+        ttyio.echo("argument error", level="error")
         continue
 
-      ttyio.echo("bbs.main.220: prgargs=%r" % (prgargs), level="debug")
+      if args.debug is True:
+        ttyio.echo("bbs.main.220: prgargs=%r" % (prgargs), level="debug")
       done = bbsengine.runcallback(prgargs, "%s.main" % (prg))
 
 #    bbsengine.poparea()
 
-def buildargs(args=None):
-  argparser = argparse.ArgumentParser(prog="bbs")
-  argparser.add_argument("--verbose", default=True, action="store_true", help="use verbose mode")
-  argparser.add_argument("--debug", default=False, action="store_true", help="run debug mode")
-
-  defaults = {"databasename":"zoidweb5", "databasehost": "localhost", "databaseport":5432, "databaseuser": None, "databasepassword":None}
-  bbsengine.buildargdatabasegroup(argparser, defaults)
-
-  return argparser
 
 if __name__ == "__main__":
-
   argparser = buildargs()
-#  args = argparser.parse_args()
+  args = argparser.parse_args()
 
   try:
-      main(argparser)
+      main(args)
   except KeyboardInterrupt:
       ttyio.echo("{/all}{bold}INTR{bold}")
   except EOFError:
