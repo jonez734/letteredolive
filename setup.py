@@ -6,7 +6,7 @@ from distutils.core import setup
 import time
 
 v = time.strftime("%Y%m%d%H%M")
-projectname = "bbsengine5"
+projectname = "letteredolive"
 
 setup(
   name=projectname,
@@ -14,12 +14,12 @@ setup(
   author="zoidtechnologies.com",
   author_email="%s@projects.zoidtechnologies.com" % (projectname),
   license="GPLv3",
-  py_modules=["bbsengine5", "engine"],
-  scripts=["engine"],
-  requires=["ttyio5", "getdate"],
+  py_modules=["bbs"],
+  scripts=["bbs"],
+  requires=["ttyio5", "getdate", "bbsengine5"],
   url="http://bbsengine.org/",
   classifiers=[
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Environment :: Console",
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
