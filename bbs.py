@@ -53,26 +53,24 @@ def setarea(args, left, stack=False):
 #  return
 
 commands = {
-    "baghdad":  {"prg": "baghdad",   "help": "maintain zoidweb5 sigs"},
-    "teos":     {"prg": "teos",      "help": "sig view"},
-    "socrates": {"prg": "socrates",  "help": "forums"},
-    "ogun":     {"prg": "ogun",      "help": "link database"},
-    "glossary": {"prg": "glossary",  "help": "glossary of terms"},
-    "empyre":   {"prg": "empyre",    "help": "run the game empyre"},
-    "achilles": {"prg": "achilles",  "help": "achilles: a study of msg and related flavor enhancers"},
-    "engine":   {"prg": "engine",    "help": "manage engine (members, sessions, etc)"},
-    "weather":  {"prg": "weather",   "help": "weather report"},
-    "banderole":{"prg": "banderole", "help": "print short string in large letters (banner)"},
-#    "banner":   {"prg": "banderole", "help": "alias for banderole"},
-#    "figlet":   {"prg": "banderole",    "help": "advanced 'banner'"},
+    "baghdad":     {"prg": "baghdad",     "help": "maintain zoidweb5 sigs"},
+    "teos":        {"prg": "teos",        "help": "sig view"},
+    "socrates":    {"prg": "socrates",    "help": "forums"},
+    "ogun":        {"prg": "ogun",        "help": "link database"},
+    "glossary":    {"prg": "glossary",    "help": "glossary of terms"},
+    "empyre":      {"prg": "empyre",      "help": "run the game empyre"},
+    "achilles":    {"prg": "achilles",    "help": "achilles: a study of msg and related flavor enhancers"},
+    "engine":      {"prg": "engine",      "help": "manage engine (members, sessions, etc)"},
+    "weather":     {"prg": "weather",     "help": "weather report"},
+    "banderole":   {"prg": "banderole",   "help": "print short string in large letters (banner)"},
     "votingbooth": {"prg": "votingbooth", "help": "vote on various topics"},
     "vb":          {"prg": "votingbooth", "help": "alias for votingbooth"},
-    "projup":      {"prg": "projup", "help": "add or update a project to projetflow"},
-    "pho":         {"prg": "pho", "help": "lookup phone numbers"},
-    "grepproj":    {"prg": "grepproj", "help": "grep through projects"},
-
-#    "testsetarea": {"prg": "testsetarea", "help": "a test program for making sure setarea() works properly"},
-    "logout":   {"help": "logout of the system"},
+    "projup":      {"prg": "projup",      "help": "add or update a project to projetflow"},
+    "pho":         {"prg": "pho",         "help": "lookup phone numbers"},
+    "grepproj":    {"prg": "grepproj",    "help": "grep through projects"},
+    "blackjack":   {"prg": "blackjack",   "help": "the game of blackjack, no betting"},
+    "repo":        {"prg": "repo",        "help": "software repository management"},
+    "logout":      {"help": "logout of the system"},
 }
 
 # @since 20201125
@@ -125,7 +123,7 @@ def main(args=None):
 
 #  ttyio.echo("args=%r" % (args), level="debug")
 
-  ttyio.echo("{f6:5}{cursorup:5}") # {curpos:%d,0}" % (ttyio.getterminalheight()-5))
+  ttyio.echo("{f6:3}{cursorup:3}") # {curpos:%d,0}" % (ttyio.getterminalheight()-5))
   bbsengine.initscreen(bottommargin=1)
 
 #  setarea(args, "the galaxy federation bbs", stack=True)
@@ -142,7 +140,7 @@ def main(args=None):
     if args.debug is True:
       ttyio.echo("bbs.main.200: areastack=%r" % (bbsengine.areastack), level="debug")
 
-    prompt = "{var:engine.areacolor}%s{/bgcolor}{F6}{green}gf main: {lightgreen}" % (bbsengine.datestamp(format="%c"))
+    prompt = "{f6}{var:engine.areacolor}%s{/bgcolor}{F6}{green}gf main: {lightgreen}" % (bbsengine.datestamp(format="%c"))
 
     try:
       buf = ttyio.inputstring(prompt, multiple=False, returnseq=False, verify=None, completer=shellCommandCompleter(args), completerdelims=" ")
@@ -185,7 +183,6 @@ def main(args=None):
       done = bbsengine.runcallback(prgargs, "%s.main" % (prg))
 
 #    bbsengine.poparea()
-
 
 if __name__ == "__main__":
   argparser = buildargs()
