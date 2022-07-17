@@ -24,8 +24,8 @@
 - check current environment for the command
 - handle commands. search for _*.py
 - commands
-- if shellout, make sure all **kwargs are passed to system command (@since 20220428)
-- if prg (only runnable from bbs), call prg.buildargs() before call to parse_args()
+- [x] if shellout, make sure all **kwargs are passed to system command (@since 20220428)
+- [x] if prg (only runnable from bbs), call prg.buildargs() before call to parse_args()
 - [x] in shell, banner --help should show --center, etc (@since 20220428)
 - optimize. callback() vs bbs.runprg(), etc
 - (https://docs.python.org/3/library/importlib.html#importlib.abc.Loader.exec_module)[use exec_module instead of load_module]
@@ -38,7 +38,6 @@
         * if `callback` is a string, split it on ".". if there's only one element ("empyre"), that becomes the module name and use 'main' as funcname
         * if callback is still not callable, eval `callback` and check again
         * first try to call empyre.buildargs(), then try to call empyre.main()
-
 - git@github.com:jonez734/letteredolive.git
 - https://www.google.com/search?q=south+carolina+state+shell&sxsrf=ALiCzsYxibv8Kf5JjFz54lECes_DvkirIA%3A1651452162000&ei=ASlvYrvlPK--ggfbzbfYAg&ved=0ahUKEwj76erbyr_3AhUvn-AKHdvmDSsQ4dUDCA4&uact=5&oq=south+carolina+state+shell&gs_lcp=Cgdnd3Mtd2l6EAMyBQguEIAEMgYIABAWEB4yCAgAEBYQChAeMgYIABAWEB4yBQgAEIYDMgUIABCGAzIFCAAQhgMyBQgAEIYDOgcIABBHELADOgoIABBHELADEMkDOgQIIxAnOggIABCABBDJAzoFCAAQgAQ6CggAEIAEEIcCEBQ6CwguEIAEEMcBEK8BOgoILhCABBCHAhAUOggIABCABBCxAzoLCC4QgAQQsQMQgwE6DQguEIAEEIcCELEDEBQ6BQgAELEDOg4ILhCABBCxAxCDARDUAjoOCC4QgAQQxwEQrwEQ1AI6DQgAEIAEEIcCELEDEBQ6DggAEIAEELEDEIMBEMkDOgsILhCABBDHARCjAjoJCAAQyQMQFhAeSgQIQRgASgQIRhgAUJ4GWIcbYLwdaAJwAXgAgAHUAYgB9g-SAQYwLjE1LjGYAQCgAQHIAQjAAQE&sclient=gws-wiz
 - https://stackoverflow.com/questions/24666197/argparse-combining-parent-parser-subparsers-and-default-values
@@ -51,19 +50,26 @@
 - run empyre from tcsh with --debug, works correctly. run empyre from bbs with --debug, does not work correctly (@since 20220509)
 - [x] running 'empyre --help' from the shell exits the shell (@since 20220509) (@done 20220510) trapped SystemExit @see https://stackoverflow.com/questions/58367375/can-i-prevent-argparse-from-exiting-if-the-user-specifies-h
 - https://docs.python.org/3/library/argparse.html#exit-on-error
-- [ ] bbsengine.setarea() has a diff areastack than empyre.bbsengine.setarea() (shell) (@since 20220513)
+- bbsengine.setarea() has a diff areastack than empyre.bbsengine.setarea() (shell) (@since 20220513)
 - [x] prompt does not show timezone - call time.tzset() (@since 20220515) (@done 20220516)
-- [ ] add hard-coded commands to help and tab-complete (logout, lo, etc) (@since 20220516)
-- [ ] aliases: banner -> banderole. add them to help (@since 20220516)
+- [x] add hard-coded commands to help and tab-complete (logout, lo, etc) (@since 20220516)
+- [x] aliases: banner -> banderole. add them to help (@since 20220516 @done 20220531)
 - [ ] handle SIGHUP (@since 20220516)
     * https://docs.python.org/3/library/faulthandler.html#module-faulthandler
     * https://docs.python.org/3/library/signal.html#signal.SIGHUP
     * https://docs.python.org/3/library/signal.html#signal.signal
 - [ ] add accessprg() to most prgs, given an op and other details, return bool (@since 20220517)
-- [ ] figure out why a module like figlet from bbs is not reloaded every time (@since 20220519)
+- [ ] !figure out why a module like figlet from bbs is not reloaded every time (@since 20220519)
 
 === migrate to setuptools ===
 - [setuptools not copying files]](https://www.google.com/search?q=setuptools+not+copying+files&oq=setuptools+not+copying+files&aqs=chrome..69i57.6941j1j7&sourceid=chrome&ie=UTF-8)
 - https://python-packaging-tutorial.readthedocs.io/en/latest/setup_py.html
 - https://jwodder.github.io/kbits/posts/pypkg-mistakes/
 - https://unix.stackexchange.com/questions/19317/can-less-retain-colored-output
+
+- (https://stackoverflow.com/questions/2059482/python-temporarily-modify-the-current-processs-environment)[python temporarily modify the current process environment]
+- sometimes, the environ change should be permanent ("ZZ"). this is so a py file can set ZZ and it will "stick" when returned to the shell (@since 20220607)
+- https://stackoverflow.com/questions/16472639/setting-up-idle-thread-signalling-thread
+- https://stackoverflow.com/questions/16452517/controlling-ui-elements-in-wxpython-using-threading/16452674#16452674
+
+
