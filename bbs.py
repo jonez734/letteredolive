@@ -140,7 +140,7 @@ def main(args=None):
     if args.debug is True:
       ttyio.echo("bbs.main.200: areastack=%r" % (bbsengine.areastack), level="debug")
 
-    prompt = "{f6}{var:engine.areacolor}%s{/bgcolor}{F6}{green}gf main: {lightgreen}" % (bbsengine.datestamp(format="%c"))
+    prompt = "{f6}{var:promptcolor}%s{F6}gfd main: {var:inputcolor}" % (bbsengine.datestamp(format="%c"))
 
     try:
       buf = ttyio.inputstring(prompt, multiple=False, returnseq=False, verify=None, completer=shellCommandCompleter(args), completerdelims=" ")
@@ -168,6 +168,7 @@ def main(args=None):
 
     v = commands[argv[0]]
     prg = v["prg"]
+    bbsengine.runcallback(args, "%s.init" % (prg))
     prgargparse = bbsengine.runcallback(args, "%s.buildargs" % (prg))
     if prgargparse is not None:
       try:
