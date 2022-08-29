@@ -1,8 +1,10 @@
 import os
+import sys
 import time
 import locale
 import argparse
 import importlib
+import traceback
 
 import ttyio5 as ttyio
 import bbsengine5 as bbsengine
@@ -56,7 +58,7 @@ commands = {
     "baghdad":     {"prg": "baghdad",     "help": "maintain zoidweb5 sigs"},
     "teos":        {"prg": "teos",        "help": "sig view"},
     "socrates":    {"prg": "socrates",    "help": "forums"},
-    "ogun":        {"prg": "ogun",        "help": "link database"},
+    "ogun":        {"prg": "ogun",        "help": "link database (zoidweb5)"},
     "glossary":    {"prg": "glossary",    "help": "glossary of terms"},
     "empyre":      {"prg": "empyre",      "help": "run the game empyre"},
     "achilles":    {"prg": "achilles",    "help": "achilles: a study of msg and related flavor enhancers"},
@@ -65,11 +67,12 @@ commands = {
     "banderole":   {"prg": "banderole",   "help": "print short string in large letters (banner)"},
     "votingbooth": {"prg": "votingbooth", "help": "vote on various topics"},
     "vb":          {"prg": "votingbooth", "help": "alias for votingbooth"},
-    "projup":      {"prg": "projup",      "help": "add or update a project to projetflow"},
-    "pho":         {"prg": "pho",         "help": "lookup phone numbers"},
-    "grepproj":    {"prg": "grepproj",    "help": "grep through projects"},
-    "blackjack":   {"prg": "blackjack",   "help": "the game of blackjack, no betting"},
+    "projup":      {"prg": "zoidbo.project.projup",      "help": "add or update a project to projectflow"},
+    "pho":         {"prg": "zoidbo.project.pho",         "help": "lookup phone numbers"},
+    "grepproj":    {"prg": "zoidbo.project.grepproj",    "help": "search through projects"},
+    "blackjack":   {"prg": "blackjack",   "help": "the game of blackjack, no gambling"},
     "repo":        {"prg": "repo",        "help": "software repository management"},
+    "casino":      {"prg": "casino",      "help": "use the casino"},
     "logout":      {"help": "logout of the system"},
 }
 
@@ -156,7 +159,7 @@ def main(args=None):
     elif buf == "?" or buf == "help":
       help()
       continue
-    elif buf == "logout" or buf == "lo" or buf == "quit" or buf == "q" or buf == "o!" or buf == "o":
+    elif buf in ("logout", "lo", "quit", "q", "o!", "o"):
       ttyio.echo("logout")
       done = True
       break
@@ -167,21 +170,30 @@ def main(args=None):
       continue
 
     v = commands[argv[0]]
+    ttyio.echo("v=%r" % (v), level="debug")
     prg = v["prg"]
-    bbsengine.runcallback(args, "%s.init" % (prg))
-    prgargparse = bbsengine.runcallback(args, "%s.buildargs" % (prg))
-    if prgargparse is not None:
-      try:
-        prgargs = prgargparse.parse_args(argv[1:])
-      except SystemExit:
-        continue
-      except argparse.ArgumentError:
-        ttyio.echo("argument error", level="error")
-        continue
+    try:
+      bbsengine.runmodule(args, prg, argv=argv)
+    except EOFError:
+      raise
+    except KeyboardInterrupt:
+      raise
+    except Exception:
+      traceback.print_exc(file=sys.stdout)
+#    bbsengine.runcallback(args, "%s.init" % (prg))
+#    prgargparse = bbsengine.runcallback(args, "%s.buildargs" % (prg))
+#    if prgargparse is not None:
+#      try:
+#        prgargs = prgargparse.parse_args(argv[1:])
+#      except SystemExit:
+#        continue
+#      except argparse.ArgumentError:
+#        ttyio.echo("argument error", level="error")
+#        continue
 
-      if args.debug is True:
-        ttyio.echo("bbs.main.220: prgargs=%r" % (prgargs), level="debug")
-      done = bbsengine.runcallback(prgargs, "%s.main" % (prg))
+#      if args.debug is True:
+#        ttyio.echo("bbs.main.220: prgargs=%r" % (prgargs), level="debug")
+#      done = bbsengine.runcallback(prgargs, "%s.main" % (prg))
 
 #    bbsengine.poparea()
 
