@@ -56,24 +56,29 @@ def setarea(args, left, stack=False):
 
 commands = {
     "baghdad":     {"prg": "baghdad",     "help": "maintain zoidweb5 sigs"},
-    "teos":        {"prg": "teos",        "help": "sig view"},
-    "socrates":    {"prg": "socrates",    "help": "forums"},
-    "ogun":        {"prg": "ogun",        "help": "link database (zoidweb5)"},
+    "teos":        {"prg": "teos",        "help": "zoidweb4 sig view"},
+    "socrates":    {"prg": "socrates",    "help": "zoidweb5 forums"},
+    "ogun":        {"prg": "ogun",        "help": "zoidweb5 link database"},
     "glossary":    {"prg": "glossary",    "help": "glossary of terms"},
     "empyre":      {"prg": "empyre",      "help": "run the game empyre"},
     "achilles":    {"prg": "achilles",    "help": "achilles: a study of msg and related flavor enhancers"},
     "engine":      {"prg": "engine",      "help": "manage engine (members, sessions, etc)"},
-    "weather":     {"prg": "weather",     "help": "weather report"},
+    "weather":     {"prg": "almanac.weather",     "help": "weather report for a given location"},
     "banderole":   {"prg": "banderole",   "help": "print short string in large letters (banner)"},
-    "votingbooth": {"prg": "votingbooth", "help": "vote on various topics"},
-    "vb":          {"prg": "votingbooth", "help": "alias for votingbooth"},
-    "projup":      {"prg": "zoidbo.project.projup",      "help": "add or update a project to projectflow"},
-    "pho":         {"prg": "zoidbo.project.pho",         "help": "lookup phone numbers"},
-    "grepproj":    {"prg": "zoidbo.project.grepproj",    "help": "search through projects"},
-    "blackjack":   {"prg": "blackjack",   "help": "the game of blackjack, no gambling"},
+    "votingbooth": {"prg": "votingbooth", "help": "vote on various topics", "aka":"vb"},
+#    "projup":      {"prg": "zoidbo.project.projup",      "help": "add or update a project to projectflow"},
+#    "pho":         {"prg": "zoidbo.project.pho",         "help": "lookup phone numbers"},
+#    "grepproj":    {"prg": "zoidbo.project.grepproj",    "help": "search through projects"},
+    "blackjack":   {"prg": "casino.blackjack",   "help": "the game of blackjack, no gambling"},
     "repo":        {"prg": "repo",        "help": "software repository management"},
     "casino":      {"prg": "casino",      "help": "use the casino"},
+    "murdermotel": {"prg": "murdermotel", "help": "the game of 'murder motel' ported from imagebbs"},
+    "almanac":     {"prg": "almanac",     "help": "almanac -- weather, zodiac, sun position, and moon position"},
+    "postoffice":  {"prg": "postoffice",  "help": "postoffice -- send and receive messages"},
+    "repotools":   {"prg": "repotools",   "help": "software repository tools"},
+    "murdermotel": {"prg": "murdermotel", "help": "murder motel -- assassination game"},
     "logout":      {"help": "logout of the system"},
+    "exit":        {"help": "exit shell"},
 }
 
 # @since 20201125
@@ -97,7 +102,7 @@ def help():
     if l > maxlen:
       maxlen = l
 
-  ttyio.echo("help.100: maxlen=%r" % (maxlen), level="debug")
+#  ttyio.echo("help.100: maxlen=%r" % (maxlen), level="debug")
   bbsengine.title("shell commands") #, hrcolor="{green}", titlecolor="{bggray}{white}")
   for k, v in commands.items():
     n = k.ljust(maxlen)
@@ -170,8 +175,11 @@ def main(args=None):
       continue
 
     v = commands[argv[0]]
-    ttyio.echo("v=%r" % (v), level="debug")
+    if args.debug is True:
+      ttyio.echo("v=%r" % (v), level="debug")
     prg = v["prg"]
+    if args.debug is True:
+      ttyio.echo("bbs.100: argv=%r" % (argv), level="debug")
     try:
       bbsengine.runmodule(args, prg, argv=argv)
     except EOFError:
