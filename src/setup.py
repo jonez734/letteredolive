@@ -14,8 +14,9 @@ setup(
   author="zoidtechnologies.com",
   author_email="%s@projects.zoidtechnologies.com" % (projectname),
   license="GPLv3",
-  scripts=["bbs"],
+  scripts=["../bin/bbs"],
   requires=["ttyio5", "bbsengine5"],
+  packages=["letteredolive"],
   url="http://bbsengine.org/",
   classifiers=[
     "Programming Language :: Python :: 3.10",
