@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from distutils.core import setup
-#from setuptools import setup
+#from distutils.core import setup
+from setuptools import setup
 
 import time
 
@@ -14,9 +14,8 @@ setup(
   author="zoidtechnologies.com",
   author_email="%s@projects.zoidtechnologies.com" % (projectname),
   license="GPLv3",
-  py_modules=["bbs"],
   scripts=["bbs"],
-  requires=["ttyio5", "getdate", "bbsengine5"],
+  requires=["ttyio5", "bbsengine5"],
   url="http://bbsengine.org/",
   classifiers=[
     "Programming Language :: Python :: 3.10",
