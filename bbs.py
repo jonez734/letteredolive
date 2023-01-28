@@ -57,14 +57,15 @@ def setarea(args, left, stack=False):
 commands = {
     "baghdad":     {"prg": "baghdad",     "help": "maintain zoidweb5 sigs"},
     "teos":        {"prg": "teos",        "help": "zoidweb4 sig view"},
-    "socrates":    {"prg": "socrates",    "help": "zoidweb5 forums"},
+    "socrates":    {"prg": "socrates",    "help": "threaded discussion system"},
+    "vulcan":      {"prg": "vulcan",      "help": "link database"},
     "ogun":        {"prg": "ogun",        "help": "zoidweb5 link database"},
     "glossary":    {"prg": "glossary",    "help": "glossary of terms"},
     "empyre":      {"prg": "empyre",      "help": "run the game empyre"},
     "achilles":    {"prg": "achilles",    "help": "achilles: a study of msg and related flavor enhancers"},
     "engine":      {"prg": "engine",      "help": "manage engine (members, sessions, etc)"},
     "weather":     {"prg": "almanac.weather",     "help": "weather report for a given location"},
-    "banderole":   {"prg": "banderole",   "help": "print short string in large letters (banner)"},
+    "banderole":   {"prg": "banderole",   "help": "print short string in large letters (from banner)"},
     "votingbooth": {"prg": "votingbooth", "help": "vote on various topics", "aka":"vb"},
 #    "projup":      {"prg": "zoidbo.project.projup",      "help": "add or update a project to projectflow"},
 #    "pho":         {"prg": "zoidbo.project.pho",         "help": "lookup phone numbers"},
@@ -77,6 +78,9 @@ commands = {
     "postoffice":  {"prg": "postoffice",  "help": "postoffice -- send and receive messages"},
     "repotools":   {"prg": "repotools",   "help": "software repository tools"},
     "murdermotel": {"prg": "murdermotel", "help": "murder motel -- assassination game"},
+    "whiteboard":  {"prg": "zoidbackoffice.whiteboard", "help": "whiteboard -- part of zoid backoffice"},
+    "wb":          {"prg": "zoidbackoffice.whiteboard", "help": "whiteboard -- part of zoid backoffice"},
+
     "logout":      {"help": "logout of the system"},
     "exit":        {"help": "exit shell"},
 }
@@ -114,7 +118,7 @@ def help():
   return
 
 def buildargs(args=None):
-  argparser = argparse.ArgumentParser(prog="bbs")
+  argparser = argparse.ArgumentParser(prog="letteredolive")
   argparser.add_argument("--verbose", default=True, action="store_true", help="use verbose mode")
   argparser.add_argument("--debug", default=False, action="store_true", help="use debug mode")
 
@@ -131,8 +135,7 @@ def main(args=None):
 
 #  ttyio.echo("args=%r" % (args), level="debug")
 
-  ttyio.echo("{f6:3}{cursorup:3}") # {curpos:%d,0}" % (ttyio.getterminalheight()-5))
-  bbsengine.initscreen(bottommargin=1)
+  bbsengine.initscreen()
 
 #  setarea(args, "the galaxy federation bbs", stack=True)
 
