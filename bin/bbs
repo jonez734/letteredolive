@@ -1,5 +1,7 @@
 #!/bin/sh
+DATABASEPORT=5432
+
 if [ "$HOST" = "cyclops.zoidtechnologies.com" ]; then DATABASEPORT=5432; printf "cyclops\n"; fi
 if [ "$HOST" = merlin.zoidtechnologies.com ]; then DATABASEPORT=5433; printf "merlin\n"; fi
 
-python3 -W all -m bbs --databaseport=$DATABASEPORT "$@"
+python3 -W all -m letteredolive --databaseport=$DATABASEPORT "$@"
