@@ -17,7 +17,7 @@ setup(
   scripts=["../bin/bbs"],
   requires=["ttyio5", "bbsengine5"],
   packages=["letteredolive"],
-  url="http://bbsengine.org/",
+  url="https://projects.zoidtechnologies.com/%s/" % (projectname),
   classifiers=[
     "Programming Language :: Python :: 3.10",
     "Environment :: Console",
