@@ -66,7 +66,7 @@ class shellCommandCompleter(object):
     results = [x for x in vocab if x.startswith(text)] + [None]
     return results[state]
 
-def help(args=None):
+def help(args=None, **kw):
   maxlen = 0
   for k in commands.keys():
     l = len(k)+2
@@ -121,10 +121,11 @@ def main(args=None):
 #    if args.debug is True:
 #      ttyio.echo("bbs.main.200: areastack=%r" % (bbsengine.areastack), level="debug")
 
-    prompt = "{f6}{var:promptcolor}%s{F6}gfd main: {var:inputcolor}" % (bbsengine.datestamp(format="%c"))
+    preinputhook = f"{{f6}}{{var:promptcolor}}{bbsengine.datestamp(format='%c')}"
+    prompt = "{var:promptcolor}gfd main: {var:inputcolor}"
 
     try:
-      buf = ttyio.inputstring(prompt, multiple=False, returnseq=False, verify=None, completer=shellCommandCompleter(args), completerdelims=" ")
+      buf = ttyio.inputstring(prompt, multiple=False, returnseq=False, verify=None, completer=shellCommandCompleter(args), completerdelims=" ", preinputhook=preinputhook, help=help)
     except EOFError:
       ttyio.echo("EOF")
       return
@@ -152,7 +153,7 @@ def main(args=None):
       ttyio.echo("v=%r" % (v), level="debug")
     prg = v["prg"]
     if args.debug is True:
-      ttyio.echo("bbs.100: argv=%r" % (argv), level="debug")
+      ttyio.echo("letteredolive.100: argv=%r" % (argv), level="debug")
     try:
       bbsengine.runmodule(args, prg, argv=argv)
     except EOFError:
