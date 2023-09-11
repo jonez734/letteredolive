@@ -25,25 +25,16 @@ def buildargs(args=None, **kw):
     
 def main(args, **kw):
     if args is not None and "debug" in args and args.debug is True:
-        ttyio.echo(f"empyre.main.100: args={args!r}", level="debug")
+        ttyio.echo(f"letteredolive.main.100: args={args!r}", level="debug")
 
-    bbsengine.util.heading("empyre")
+    bbsengine.util.heading("lettered olive")
 
     if args.debug is True:
         ttyio.echo("database: %s host: %s:%s" % (args.databasename, args.databasehost, args.databaseport), level="debug")
 
-    lib.setarea(args, None, "startup %s rev %s" % (_version.__datestamp__, _version.__version__))
+#    ttyio.echo(f"letteredolive.main.main.100: args={args!r}", level="debug")
+    lib.setarea(args, "letteredolive", "startup %s rev %s" % (_version.__datestamp__, _version.__version__))
 
-    currentmemberid = bbsengine.member.getcurrentid(args)
-    if args.debug is True:
-        ttyio.echo("startup.300: currentmemberid=%r" % (currentmemberid), level="debug")
-    player = lib.getplayer(args, currentmemberid)
-    if player is None:
-        ttyio.echo("startup.200: new player", level="debug")
-        player = lib.Player(args)
-        player.new()
-        lib.newsentry(args, player, f"New Player {player.name}!")
-
-    if lib.runsubmodule(args, player, "main") is False:
+    if lib.runsubmodule(args, "main") is False:
         ttyio.echo("error running submodule 'main'", level="error")
     return    
