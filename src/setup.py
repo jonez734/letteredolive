@@ -15,7 +15,7 @@ setup(
   author_email="%s@projects.zoidtechnologies.com" % (projectname),
   license="GPLv2",
   scripts=["../bin/bbs", "../bin/letteredolive"],
-  requires=["ttyio5", "bbsengine5"],
+  requires=["ttyio6", "bbsengine6"],
   packages=["letteredolive"],
   url="https://projects.zoidtechnologies.com/%s/" % (projectname),
   classifiers=[
