@@ -1,20 +1,37 @@
 import argparse
+from bbsengine6 import io, screen, database
+import bbsengine6 as bbsengine
 
-import ttyio5 as ttyio
-import bbsengine5 as bbsengine
+from . import lib
 
-from .common import *
+#from . import module
 
-argparser = buildargs()
-args = argparser.parse_args()
+def init(args, **kw):
+    bbsengine.init(args)
+    screen.init()
 
-bbsengine.initscreen()
+    return True
 
-try:
-    main(args)
-except KeyboardInterrupt:
-    ttyio.echo("{/all}{bold}INTR{bold}")
-except EOFError:
-    ttyio.echo("{/all}{bold}EOF{/bold}")
-finally:
-    ttyio.echo("{decsc}{curpos:%d,0}{el}{decrc}{reset}{/all}" % (ttyio.getterminalheight()))
+def access(args, op, **kw):
+    return True
+
+def buildargs(args=None, **kw):
+    parser = argparse.ArgumentParser("letteredolive")
+    parser.add_argument("--debug", default=False)
+    database.buildarggroup(parser)
+    return parser
+
+if __name__ == "__main__":
+    parser = buildargs()
+    args = parser.parse_args()
+
+    init(args)
+
+    try:
+        lib.runmodule(args, "main")
+    except KeyboardInterrupt:
+        io.echo("{/all}*INTR*")
+    except EOFError:
+        io.echo("{/all}*EOF*")
+    finally:
+        io.echo(f"{{savecursor}}{{curpos:{io.terminal.height()},0}}{{el}}{{restorecursor}}{{reset}}{{/all}}")
