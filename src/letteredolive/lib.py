@@ -14,7 +14,7 @@ from bbsengine6 import io, screen, member, module, util
 # @see https://pymotw.com/3/importlib/
 #
 
-def setarea(args, left="", stack=False):
+def setbottombar(args, left="", stack=False):
   def right():
     currentmember = member.getcurrent(args)
     if currentmember is None:
@@ -26,7 +26,7 @@ def setarea(args, left="", stack=False):
 
   if args.debug is True:
     io.echo(f"letteredolive.lib.setarea.right.100: left={left!r} right={right!r} stack={stack!r}", level="debug")
-  screen.setarea(left, right, stack)
+  screen.setbottombar(left, right, stack)
 
 commands = {
 #    "baghdad":     {"prg": "baghdad",     "help": "maintain zoidweb5 sigs"},
@@ -42,7 +42,7 @@ commands = {
     "banderole":   {"prg": "banderole",   "help": "print short string in large letters (from figlet)"},
     "votingbooth": {"prg": "votingbooth", "help": "vote on various topics", "aka":"vb"},
     "blackjack":   {"prg": "casino.blackjack",   "help": "the game of blackjack, no gambling"},
-    "repo":        {"prg": "repo",        "help": "software repository management"},
+    "repo":        {"prg": "repo",        "help": "software repository"},
     "casino":      {"prg": "casino",      "help": "use the casino"},
     "murdermotel": {"prg": "murdermotel", "help": "the game of 'murder motel' ported from imagebbs"},
     "almanac":     {"prg": "almanac",     "help": "almanac -- weather, zodiac, sun position, and moon position"},
@@ -67,7 +67,7 @@ class shellCommandCompleter(object):
     results = [x for x in vocab if x.startswith(text)] + [None]
     return results[state]
 
-def help(**kw):
+def help(**kwargs):
   args = kw["args"] if "args" in kw else None
 
   io.echo("help")
@@ -94,17 +94,17 @@ def help(**kw):
   io.echo("{/all}")
   return
 
-def checkmodule(args, modulename, **kw):
+def checkmodule(args, modulename, **kwargs):
     x = f"{PACKAGENAME}.{modulename}"
-    return module.check(args, x, **kw)
+    return module.check(args, x, **kwargs)
 
-def runmodule(args, modulename, **kw):
+def runmodule(args, modulename, **kwargs):
     x = f"{PACKAGENAME}.{modulename}"
     if args.debug is True:
         io.echo(f"letteredolive.100: {x=}", level="debug")
 
-    if module.check(args, x, **kw) is False:
+    if module.check(args, x, **kwargs) is False:
         io.echo("letteredolive.120: module {x} not available", level="error")
         return False
 
-    return module.runmodule(args, x, **kw)
+    return module.runmodule(args, x, **kwargs)
