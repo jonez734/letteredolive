@@ -1,10 +1,22 @@
+import time
+import locale
+
+#import bbsengine6 as bbsengine
+#import ttyio6 as ttyio
+from bbsengine6 import io, screen, util, module
+
+from . import lib
+
 def access(args, op, **kw):
     return True
 
 def init(args, **kw):
     return True
 
-def main(args=None, **kw):
+def buildargs(args=None, **kw):
+  return None
+
+def main(args, **kw):
 #  ttyio.setvariable("engine.areacolor", "{bggray}{white}")
 
   locale.setlocale(locale.LC_ALL, "")
@@ -12,7 +24,7 @@ def main(args=None, **kw):
 
 #  ttyio.echo("args=%r" % (args), level="debug")
 
-  bbsengine.screen.init()
+  screen.init()
 
 #  setarea(args, "the galaxy federation bbs", stack=True)
 
@@ -21,52 +33,49 @@ def main(args=None, **kw):
     # @todo: handle subcommands as tab-complete (@see cmd2)
     # ttyio.echo("args=%r" % (args), level="debug")
 
-    setarea(args, "the galaxy federation bbs", stack=False)
+    lib.setbottombar(args, "the galaxy federation bbs v6", stack=False)
 
 #	ttyio.setvariable("engine.areacolor", "{bggray}{white}")
 
 #    if args.debug is True:
 #      ttyio.echo("bbs.main.200: areastack=%r" % (bbsengine.areastack), level="debug")
 
-    preinputhook = f"{{f6}}{{var:promptcolor}}{bbsengine.datestamp(format='%c')}"
-    prompt = "{var:promptcolor}gfd main: {var:inputcolor}"
+    preinputhook = f"{{f6}}{{var:promptcolor}}{util.datestamp(format='%c')}"
+    prompt = "{var:promptcolor}ProtoVision: {var:inputcolor}"
 
-    try:
-      buf = ttyio.inputstring(prompt, multiple=False, returnseq=False, verify=None, completer=shellCommandCompleter(args), completerdelims=" ", preinputhook=preinputhook, help=help)
-    except EOFError:
-      ttyio.echo("EOF")
-      return
-    except KeyboardInterrupt:
-      ttyio.echo("INTR")
-      return
+    buf = io.inputstring(prompt, multiple=False, returnseq=False, verify=None, completer=lib.shellCommandCompleter(args), completerdelims=" ", preinputhook=preinputhook, help=lib.help, args=args)
 
     if buf is None or buf == "":
       continue
-    elif buf == "?" or buf == "help":
-      help(args)
-      continue
+#    elif buf == "?" or buf == "help" or buf == "KEY_HELP":
+#      ttyio.echo("help")
+#      lib.help(args=args)
+#      continue
     elif buf in ("exit", "logout", "lo", "quit", "q", "o!", "o"):
-      ttyio.echo("logout")
+      io.echo("logout")
       done = True
       break
 
+    if args.debug is True:
+      io.echo(f"letteredolive.100: {buf=}", level="debug")
+
     argv = buf.split(" ")
-    if argv[0] not in commands:
-      ttyio.echo("command not found", level="error")
+    if argv[0] not in lib.commands:
+      io.echo("command not found", level="error")
       continue
 
-    v = commands[argv[0]]
+    v = lib.commands[argv[0]]
     if args.debug is True:
-      ttyio.echo("v=%r" % (v), level="debug")
+      io.echo(f"{v=}", level="debug")
     prg = v["prg"]
     if args.debug is True:
-      ttyio.echo("letteredolive.100: argv=%r" % (argv), level="debug")
+      io.echo(f"letteredolive.100: {argv=}", level="debug")
     try:
-      bbsengine.runmodule(args, prg, argv=argv)
+      module.runmodule(args, prg, argv=argv)
     except EOFError:
       raise
     except KeyboardInterrupt:
       raise
     except Exception:
-      import traceback
+      import traceback, sys
       traceback.print_exc(file=sys.stdout)
