@@ -35,12 +35,12 @@
 
 Details:
 
-    Common name: Lettered olive
+Common name: Lettered olive
 
-    Scientific name: Oliva sayana
+Scientific name: Oliva sayana
 
-    Appearance: Smooth, glossy, cylindrical shell with distinctive brownish markings that can look like letters or scribbles—hence the name.
+Appearance: Smooth, glossy, cylindrical shell with distinctive brownish markings that can look like letters or scribbles—hence the name.
 
-    Habitat: Sandy shores and shallow waters, particularly along the Atlantic and Gulf coasts of the U.S.
+Habitat: Sandy shores and shallow waters, particularly along the Atlantic and Gulf coasts of the U.S.
 
-    So yes, if you're referring to a glossy, patterned shell often found along the southeastern U.S. coast, “lettered olive” is indeed the correct term.
+So yes, if you're referring to a glossy, patterned shell often found along the southeastern U.S. coast, “lettered olive” is indeed the correct term.
