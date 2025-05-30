@@ -5,12 +5,12 @@ from . import lib
 
 #from . import module
 
-def init(args, **kw):
+def init(args, **kwargs) -> bool:
     screen.init()
 
     return True
 
-def access(args, op, **kw):
+def access(args, op:str, **kwargs) -> bool:
     return True
 
 def buildargs(args=None, **kw):
