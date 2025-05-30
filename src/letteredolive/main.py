@@ -7,16 +7,16 @@ from bbsengine6 import io, screen, util, module
 
 from . import lib
 
-def access(args, op, **kw):
+def access(args, op, **kwargs):
     return True
 
-def init(args, **kw):
+def init(args, **kwargs):
     return True
 
-def buildargs(args=None, **kw):
+def buildargs(args=None, **kwargs):
   return None
 
-def main(args, **kw):
+def main(args, **kwargs):
 #  ttyio.setvariable("engine.areacolor", "{bggray}{white}")
 
   locale.setlocale(locale.LC_ALL, "")
@@ -33,7 +33,7 @@ def main(args, **kw):
     # @todo: handle subcommands as tab-complete (@see cmd2)
     # ttyio.echo("args=%r" % (args), level="debug")
 
-    lib.setbottombar(args, "the galaxy federation bbs v6", stack=False)
+    lib.setbottombar(args, "falcon", stack=False)
 
 #	ttyio.setvariable("engine.areacolor", "{bggray}{white}")
 
