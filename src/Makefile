@@ -6,6 +6,7 @@ PYTHON = python3
 
 .PHONY: build version
 .PHONY: clean build rename-sdist sign release all
+.PHONY: test integrated
 
 build:
 	VERSION=$(VERSION) python3 -m build --outdir $(OUTDIR)
@@ -52,3 +53,9 @@ tag:
 		git tag -a v$(VERSION) -m "Release v$(VERSION)"; \
 		echo "Tag v$(VERSION) created locally."; \
 	fi
+
+test:
+	$(PYTHON) -m pytest letteredolive/tests/ -v
+
+integrated:
+	$(PYTHON) -m pytest letteredolive/tests/test_murdermotel_from_letteredolive.py -v

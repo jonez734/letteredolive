@@ -31,3 +31,8 @@ backup:
 
 www:
 	$(MAKE) -C www prod
+
+test:
+	cd src && $(PYTHON) -m pytest letteredolive/tests/ -v
+
+.PHONY: test
