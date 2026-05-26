@@ -1,0 +1,42 @@
+{
+    "_schema_version": "1.0",
+    "_description": "Command registry for letteredolive",
+    "commands": {
+        "empyre": {
+            "path": "empyre",
+            "help": "run the game empyre"
+        },
+        "murdermotel": {
+            "path": "murdermotel",
+            "help": "murder motel -- assassination game"
+        },
+        "con": {
+            "path": "con",
+            "help": "system operations console"
+        },
+        "repo": {
+            "path": "repo",
+            "help": "software repository"
+        },
+        "weather": {
+            "path": "almanac.weather",
+            "help": "weather report for a given location"
+        },
+        "banderole": {
+            "path": "banderole",
+            "help": "print short string in large letters (from figlet)"
+        },
+        "moneyday": {
+            "path": "moneyday",
+            "help": "displays a calendar showing e.g. the 2nd wednesday of a month"
+        },
+        "logout": {
+            "path": null,
+            "help": "logout of the system"
+        },
+        "exit": {
+            "path": null,
+            "help": "exit shell"
+        }
+    }
+}

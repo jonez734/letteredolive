@@ -8,7 +8,9 @@ import pytest
 class TestMurdermotelFromLetteredolive:
     """Test that pool flows from letteredolive to murdermotel."""
 
+    @patch("bbsengine6.util.heading")
     @patch("bbsengine6.io.echo")
+    @patch("bbsengine6.io.screen.init")
     @patch("bbsengine6.module.runmodule")
     @patch("bbsengine6.io.inputstring")
     @patch("bbsengine6.io.screen.setbottombar")
@@ -21,7 +23,9 @@ class TestMurdermotelFromLetteredolive:
         mock_setbottombar,
         mock_inputstring,
         mock_runmodule,
+        mock_screen_init,
         mock_echo,
+        mock_heading,
         mock_args,
         mock_pool,
     ):
@@ -41,7 +45,9 @@ class TestMurdermotelFromLetteredolive:
         assert call_args.kwargs.get("pool") is mock_pool
         assert call_args.kwargs.get("argv") == ["murdermotel"]
 
+    @patch("bbsengine6.util.heading")
     @patch("bbsengine6.io.echo")
+    @patch("bbsengine6.io.screen.init")
     @patch("bbsengine6.module.runmodule")
     @patch("bbsengine6.io.inputstring")
     @patch("bbsengine6.io.screen.setbottombar")
@@ -54,7 +60,9 @@ class TestMurdermotelFromLetteredolive:
         mock_setbottombar,
         mock_inputstring,
         mock_runmodule,
+        mock_screen_init,
         mock_echo,
+        mock_heading,
         mock_args,
     ):
         """Verify pool=None is still passed (not silently fixed)."""
@@ -71,7 +79,9 @@ class TestMurdermotelFromLetteredolive:
         call_args = mock_runmodule.call_args
         assert call_args.kwargs.get("pool") is None
 
+    @patch("bbsengine6.util.heading")
     @patch("bbsengine6.io.echo")
+    @patch("bbsengine6.io.screen.init")
     @patch("bbsengine6.module.runmodule")
     @patch("bbsengine6.io.inputstring")
     @patch("bbsengine6.io.screen.setbottombar")
@@ -84,7 +94,9 @@ class TestMurdermotelFromLetteredolive:
         mock_setbottombar,
         mock_inputstring,
         mock_runmodule,
+        mock_screen_init,
         mock_echo,
+        mock_heading,
         mock_args,
         mock_pool,
     ):
@@ -102,7 +114,9 @@ class TestMurdermotelFromLetteredolive:
         call_args = mock_runmodule.call_args
         assert call_args.args[1] == "murdermotel"
 
+    @patch("bbsengine6.util.heading")
     @patch("bbsengine6.io.echo")
+    @patch("bbsengine6.io.screen.init")
     @patch("bbsengine6.io.inputstring")
     @patch("bbsengine6.io.screen.setbottombar")
     @patch("bbsengine6.io.common.get_dsr")
@@ -113,7 +127,9 @@ class TestMurdermotelFromLetteredolive:
         mock_get_dsr,
         mock_setbottombar,
         mock_inputstring,
+        mock_screen_init,
         mock_echo,
+        mock_heading,
         mock_args,
         mock_pool,
     ):
@@ -126,7 +142,9 @@ class TestMurdermotelFromLetteredolive:
         result = lo_main.main(mock_args, pool=mock_pool)
         assert result is None
 
+    @patch("bbsengine6.util.heading")
     @patch("bbsengine6.io.echo")
+    @patch("bbsengine6.io.screen.init")
     @patch("bbsengine6.module.runmodule")
     @patch("bbsengine6.io.inputstring")
     @patch("bbsengine6.io.screen.setbottombar")
@@ -139,7 +157,9 @@ class TestMurdermotelFromLetteredolive:
         mock_setbottombar,
         mock_inputstring,
         mock_runmodule,
+        mock_screen_init,
         mock_echo,
+        mock_heading,
         mock_args,
         mock_pool,
     ):
@@ -162,7 +182,9 @@ class TestMurdermotelFromLetteredolive:
 class TestLetteredoliveMainPoolForwarding:
     """Test pool extraction and forwarding in letteredolive.main.main."""
 
+    @patch("bbsengine6.util.heading")
     @patch("bbsengine6.io.echo")
+    @patch("bbsengine6.io.screen.init")
     @patch("bbsengine6.module.runmodule")
     @patch("bbsengine6.io.inputstring")
     @patch("bbsengine6.io.screen.setbottombar")
@@ -175,7 +197,9 @@ class TestLetteredoliveMainPoolForwarding:
         mock_setbottombar,
         mock_inputstring,
         mock_runmodule,
+        mock_screen_init,
         mock_echo,
+        mock_heading,
         mock_args,
         mock_pool,
     ):
