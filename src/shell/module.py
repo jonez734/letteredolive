@@ -12,7 +12,7 @@ def init(args: Optional[Any] = None, **kw: Any) -> bool:
 
 
 def buildargs(args: Optional[Any] = None, **kw: Any) -> Any:
-    parser: Any = __import__("argparse").ArgumentParser("letteredolive")
+    parser: Any = __import__("argparse").ArgumentParser("shell")
     parser.add_argument("--verbose", action="store_true", dest="verbose")
     parser.add_argument("--debug", action="store_true", dest="debug")
 
@@ -30,7 +30,7 @@ def buildargs(args: Optional[Any] = None, **kw: Any) -> Any:
 
 def main(args: Any, **kw: Any) -> None:
     if args is not None and "debug" in args and args.debug is True:
-        io.echo(f"letteredolive.main.100: {args=}", level="debug")
+        io.echo(f"shell.main.100: {args=}", level="debug")
 
     util.heading("lettered olive")
 

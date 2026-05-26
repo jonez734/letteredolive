@@ -59,7 +59,7 @@ def main(args: Any, **kwargs: Any) -> None:
             break
 
         if args.debug is True:
-            io.echo(f"letteredolive.100: {buf=}", level="debug")
+            io.echo(f"shell.100: {buf=}", level="debug")
 
         argv = buf.split(" ")
         if argv[0] not in lib.commands:
@@ -86,7 +86,7 @@ def main(args: Any, **kwargs: Any) -> None:
             io.echo(f"{v=}", level="debug")
         prg = v["prg"]
         if args.debug is True:
-            io.echo(f"letteredolive.100: {argv=}", level="debug")
+            io.echo(f"shell.100: {argv=}", level="debug")
         try:
             module.runmodule(args, prg, argv=argv, pool=kwargs.get("pool"))
         except EOFError:
@@ -94,4 +94,4 @@ def main(args: Any, **kwargs: Any) -> None:
         except KeyboardInterrupt:
             raise
         except Exception as e:
-            io.echo_traceback(f"letteredolive.main: {e}")
+            io.echo_traceback(f"shell.main: {e}")

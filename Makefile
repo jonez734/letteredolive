@@ -27,7 +27,7 @@ push:
 	git push
 
 backup:
-	rsync --recursive --verbose --exclude=.venv . $(MEDIA)work/$(PROJECT)/
+	rsync --recursive --verbose --exclude=.venv . $(MEDIA)
 
 www:
 	$(MAKE) -C www prod

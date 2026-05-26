@@ -3,7 +3,7 @@ from typing import Any, List, Optional
 from bbsengine6 import io, screen, member, module, util
 
 
-PACKAGENAME = "letteredolive"
+PACKAGENAME = "shell"
 # @see https://sites.google.com/site/xiangyangsite/home/technical-tips/software-development/python/python-readline-completions
 # @see https://docs.python.org/3.3/howto/argparse.html#introducing-positional-arguments
 # @see https://docs.python.org/3.3/library/argparse.html#module-argparse
@@ -26,7 +26,7 @@ def setbottombar(args, left="", stack=False):
 
     if args.debug is True:
         io.echo(
-            f"letteredolive.lib.setarea.right.100: left={left!r} right={right!r} stack={stack!r}",
+            f"shell.lib.setarea.right.100: left={left!r} right={right!r} stack={stack!r}",
             level="debug",
         )
     screen.setbottombar(left, right)
@@ -95,7 +95,7 @@ def help(**kwargs: Any) -> None:
     for k, v in commands.items():
         prg = v["prg"] if "prg" in v else None
         if args is not None and args.debug is True:
-            io.echo(f"letteredolive.lib.help.100: {args=} {prg=}", level="debug")
+            io.echo(f"shell.lib.help.100: {args=} {prg=}", level="debug")
         if prg is not None and module.check(args, prg) is False:
             continue
         n = k.ljust(maxlen)
@@ -115,10 +115,10 @@ def checkmodule(args: Any, modulename: str, **kwargs: Any) -> bool:
 def runmodule(args: Any, modulename: str, **kwargs: Any) -> bool:
     x = f"{PACKAGENAME}.{modulename}"
     if args.debug is True:
-        io.echo(f"letteredolive.100: {x=}", level="debug")
+        io.echo(f"shell.100: {x=}", level="debug")
 
     if module.check(args, x, **kwargs) is False:
-        io.echo(f"letteredolive.120: module {x} not available", level="error")
+        io.echo(f"shell.120: module {x} not available", level="error")
         return False
 
     return module.runmodule(args, x, **kwargs)

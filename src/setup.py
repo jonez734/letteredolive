@@ -10,6 +10,7 @@ if v is None:
     v = time.strftime("%Y%m%d%H%M")
 
 projectname = "letteredolive"
+packagename = "shell"
 
 setup(
     name=projectname,
@@ -17,9 +18,9 @@ setup(
     author="zoidtechnologies.com",
     author_email=f"{projectname}@projects.zoidtechnologies.com",
     license="GPLv2",
-    scripts=["bin/bbs", "bin/letteredolive"],
+    scripts=["bin/bbs", "bin/shell"],
     requires=["bbsengine6"],
-    packages=["letteredolive"],
+    packages=[packagename],
     provides=[projectname],
     url=f"https://projects.zoidtechnologies.com/{projectname}/",
     classifiers=[
