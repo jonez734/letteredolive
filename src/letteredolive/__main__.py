@@ -28,7 +28,8 @@ if __name__ == "__main__":
     init(args)
 
     try:
-        lib.runmodule(args, "main")
+        with database.getpool(args) as pool:
+            lib.runmodule(args, "main", pool=pool)
     except KeyboardInterrupt:
         io.echo("{/all}*INTR*")
     except EOFError:
