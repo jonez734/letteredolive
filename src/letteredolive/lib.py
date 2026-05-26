@@ -2,6 +2,7 @@ from typing import Any, List, Optional
 
 from bbsengine6 import io, screen, member, module, util
 
+
 PACKAGENAME = "letteredolive"
 # @see https://sites.google.com/site/xiangyangsite/home/technical-tips/software-development/python/python-readline-completions
 # @see https://docs.python.org/3.3/howto/argparse.html#introducing-positional-arguments
@@ -28,7 +29,7 @@ def setbottombar(args, left="", stack=False):
             f"letteredolive.lib.setarea.right.100: left={left!r} right={right!r} stack={stack!r}",
             level="debug",
         )
-    screen.setbottombar(left, right, stack)
+    screen.setbottombar(left, right)
 
 
 commands = {

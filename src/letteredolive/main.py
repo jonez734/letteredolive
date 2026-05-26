@@ -63,7 +63,15 @@ def main(args: Any, **kwargs: Any) -> None:
 
         argv = buf.split(" ")
         if argv[0] not in lib.commands:
-            known_bbs_games = ["murdermotel", "empyre", "con", "repo", "weather", "banderole", "moneyday"]
+            known_bbs_games = [
+                "murdermotel",
+                "empyre",
+                "con",
+                "repo",
+                "weather",
+                "banderole",
+                "moneyday",
+            ]
             if argv[0] in known_bbs_games:
                 io.echo(
                     f"'{argv[0]}' is not installed or not accessible. Run: sudo pip install {argv[0]}",
@@ -80,7 +88,7 @@ def main(args: Any, **kwargs: Any) -> None:
         if args.debug is True:
             io.echo(f"letteredolive.100: {argv=}", level="debug")
         try:
-            module.runmodule(args, prg, argv=argv)
+            module.runmodule(args, prg, argv=argv, pool=kwargs.get("pool"))
         except EOFError:
             raise
         except KeyboardInterrupt:
