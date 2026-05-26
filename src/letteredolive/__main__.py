@@ -1,23 +1,25 @@
-import argparse
+from typing import Any
+
 from bbsengine6 import io, screen, database
 
 from . import lib
 
-#from . import module
 
-def init(args, **kwargs) -> bool:
+def init(args: Any, **kwargs: Any) -> bool:
     screen.init()
-
     return True
 
-def access(args, op:str, **kwargs) -> bool:
+
+def access(args: Any, op: str, **kwargs: Any) -> bool:
     return True
 
-def buildargs(args=None, **kw):
-    parser = argparse.ArgumentParser("letteredolive")
+
+def buildargs(args: Any = None, **kw: Any) -> Any:
+    parser = __import__("argparse").ArgumentParser("letteredolive")
     parser.add_argument("--debug", default=False)
     database.buildargs(parser)
     return parser
+
 
 if __name__ == "__main__":
     parser = buildargs()
@@ -32,4 +34,6 @@ if __name__ == "__main__":
     except EOFError:
         io.echo("{/all}*EOF*")
     finally:
-        io.echo(f"{{savecursor}}{{curpos:{io.terminal.height()},0}}{{el}}{{restorecursor}}{{reset}}{{/all}}")
+        io.echo(
+            f"{{savecursor}}{{curpos:{io.terminal.height()},0}}{{el}}{{restorecursor}}{{reset}}{{/all}}"
+        )

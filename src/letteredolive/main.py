@@ -1,81 +1,82 @@
-import time
-import locale
+from typing import Any
 
-#import bbsengine6 as bbsengine
-#import ttyio6 as ttyio
 from bbsengine6 import io, screen, util, module
 
 from . import lib
 
-def access(args, op, **kwargs):
+
+def access(args: Any, op: str, **kwargs: Any) -> bool:
     return True
 
-def init(args, **kwargs):
+
+def init(args: Any, **kwargs: Any) -> bool:
     return True
 
-def buildargs(args=None, **kwargs):
-  return None
 
-def main(args, **kwargs):
-#  ttyio.setvariable("engine.areacolor", "{bggray}{white}")
+def buildargs(args: Any = None, **kwargs: Any) -> None:
+    return None
 
-  locale.setlocale(locale.LC_ALL, "")
-  time.tzset()
 
-#  ttyio.echo("args=%r" % (args), level="debug")
+def main(args: Any, **kwargs: Any) -> None:
+    screen.init()
 
-  screen.init()
+    done = False
+    while not done:
+        # @todo: handle subcommands as tab-complete (@see cmd2)
+        # ttyio.echo("args=%r" % (args), level="debug")
 
-#  setarea(args, "the galaxy federation bbs", stack=True)
+        lib.setbottombar(args, "falcon", stack=False)
 
-  done = False
-  while not done:
-    # @todo: handle subcommands as tab-complete (@see cmd2)
-    # ttyio.echo("args=%r" % (args), level="debug")
+        # ttyio.setvariable("engine.areacolor", "{bggray}{white}")
 
-    lib.setbottombar(args, "falcon", stack=False)
+        #    if args.debug is True:
+        #      ttyio.echo("bbs.main.200: areastack=%r" % (bbsengine.areastack), level="debug")
 
-#	ttyio.setvariable("engine.areacolor", "{bggray}{white}")
+        preinputhook = f"{{f6}}{{var:promptcolor}}{util.datestamp(format='%c')}"
+        prompt = "{var:promptcolor}ProtoVision: {var:inputcolor}"
 
-#    if args.debug is True:
-#      ttyio.echo("bbs.main.200: areastack=%r" % (bbsengine.areastack), level="debug")
+        buf = io.inputstring(
+            prompt,
+            multiple=False,
+            returnseq=False,
+            verify=None,
+            completer=lib.shellCommandCompleter(args),
+            completerdelims=" ",
+            preinputhook=preinputhook,
+            help=lib.help,
+            args=args,
+        )
 
-    preinputhook = f"{{f6}}{{var:promptcolor}}{util.datestamp(format='%c')}"
-    prompt = "{var:promptcolor}ProtoVision: {var:inputcolor}"
+        if buf is None or buf == "":
+            continue
+        #    elif buf == "?" or buf == "help" or buf == "KEY_HELP":
+        #      ttyio.echo("help")
+        #      lib.help(args=args)
+        #      continue
+        elif buf in ("exit", "logout", "lo", "quit", "q", "o!", "o"):
+            io.echo("logout")
+            done = True
+            break
 
-    buf = io.inputstring(prompt, multiple=False, returnseq=False, verify=None, completer=lib.shellCommandCompleter(args), completerdelims=" ", preinputhook=preinputhook, help=lib.help, args=args)
+        if args.debug is True:
+            io.echo(f"letteredolive.100: {buf=}", level="debug")
 
-    if buf is None or buf == "":
-      continue
-#    elif buf == "?" or buf == "help" or buf == "KEY_HELP":
-#      ttyio.echo("help")
-#      lib.help(args=args)
-#      continue
-    elif buf in ("exit", "logout", "lo", "quit", "q", "o!", "o"):
-      io.echo("logout")
-      done = True
-      break
+        argv = buf.split(" ")
+        if argv[0] not in lib.commands:
+            io.echo("command not found", level="error")
+            continue
 
-    if args.debug is True:
-      io.echo(f"letteredolive.100: {buf=}", level="debug")
-
-    argv = buf.split(" ")
-    if argv[0] not in lib.commands:
-      io.echo("command not found", level="error")
-      continue
-
-    v = lib.commands[argv[0]]
-    if args.debug is True:
-      io.echo(f"{v=}", level="debug")
-    prg = v["prg"]
-    if args.debug is True:
-      io.echo(f"letteredolive.100: {argv=}", level="debug")
-    try:
-      module.runmodule(args, prg, argv=argv)
-    except EOFError:
-      raise
-    except KeyboardInterrupt:
-      raise
-    except Exception:
-      import traceback, sys
-      traceback.print_exc(file=sys.stdout)
+        v = lib.commands[argv[0]]
+        if args.debug is True:
+            io.echo(f"{v=}", level="debug")
+        prg = v["prg"]
+        if args.debug is True:
+            io.echo(f"letteredolive.100: {argv=}", level="debug")
+        try:
+            module.runmodule(args, prg, argv=argv)
+        except EOFError:
+            raise
+        except KeyboardInterrupt:
+            raise
+        except Exception as e:
+            io.echo_traceback(f"letteredolive.main: {e}")
