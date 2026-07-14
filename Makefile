@@ -4,7 +4,7 @@ VERSION = 0.0.0.dev$(shell date +%Y%m%d%H%M)
 MEDIA = /run/media/jam/BEA6-BBCE/work/$(PROJECT)/
 PYTHON = $(HOME)/.venv/bin/python
 
-.PHONY: all clean build sdist version
+.PHONY: all clean build sdist version deploy
 
 all:
 
@@ -35,4 +35,6 @@ www:
 test:
 	cd src && $(PYTHON) -m pytest letteredolive/tests/ -v
 
-.PHONY: test
+deploy: build
+
+.PHONY: test deploy
