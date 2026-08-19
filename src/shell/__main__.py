@@ -21,14 +21,13 @@ def buildargs(args: Any = None, **kw: Any) -> Any:
     return parser
 
 
-if __name__ == "__main__":
+def main() -> None:
     parser = buildargs()
     args = parser.parse_args()
 
-    init(args)
-
     try:
         with database.getpool(args) as pool:
+            init(args, pool=pool)
             lib.runmodule(args, "main", pool=pool)
     except KeyboardInterrupt:
         io.echo("{/all}*INTR*")
@@ -38,3 +37,7 @@ if __name__ == "__main__":
         io.echo(
             f"{{savecursor}}{{curpos:{io.terminal.height()},0}}{{el}}{{reset}}{{restorecursor}}"
         )
+
+
+if __name__ == "__main__":
+    main()

@@ -20,7 +20,7 @@ setup(
     license="GPLv2",
     scripts=["bin/bbs", "bin/shell"],
     requires=["bbsengine6"],
-    packages=[packagename],
+    packages=[packagename, projectname],
     provides=[projectname],
     url=f"https://projects.zoidtechnologies.com/{projectname}/",
     classifiers=[
