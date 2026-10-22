@@ -167,36 +167,72 @@ def clear_session() -> None:
         del _threadlocal.moniker
 
 
-def shell_login(args: Any) -> Optional[str]:
-    """Gate the shell: bed must be up; a valid token logs in; else a password.
-
-    Returns the moniker on success, or None when the shell must not start.
-    Prints nothing sensitive.
-    """
+def _bed_unreachable(args: Any) -> None:
     host = getattr(args, "bed_host", "127.0.0.1")
     port = getattr(args, "bed_port", 8765)
-    if not probe_bed(args):
-        sys.stderr.write(
-            f"bed is not reachable at {host}:{port}; the shell cannot start. "
-            "Start the bed service and try again.\n"
-        )
-        return None
+    sys.stderr.write(
+        f"bed is not reachable at {host}:{port}; the shell cannot start. "
+        "Start the bed service and try again.\n"
+    )
 
-    token_path = getattr(args, "token_file", None) or default_token_file()
-    token = ""
+
+def _try_token(args: Any, token_path: str) -> Optional[str]:
+    """Return the moniker a valid token logs in as, or None."""
     try:
         token = _token.read_token_file(token_path)
     except PermissionError as e:
         io.echo(f"token file refused: {e}", level="error")
-        token = ""
-    if token:
+        return None
+    except OSError:
+        return None
+    if not token:
+        return None
+    try:
         reply = reconnect(args, token)
-        if reply.get("ok") and reply.get("moniker"):
-            return _set_session(reply["moniker"])
+    except (OSError, ConnectionError, TimeoutError) as e:
+        _bed_unreachable(args)
+        raise _BedDown() from e
+    if reply.get("ok") and reply.get("moniker"):
+        return reply["moniker"]
+    # Rejected token: remove it so it is not retried on every start.
+    try:
+        os.remove(token_path)
+    except OSError:
+        pass
+    return None
 
-    moniker, password = prompt_credentials()
-    if not moniker or not password:
+
+class _BedDown(Exception):
+    """bed stopped answering during the token check."""
+
+
+def shell_login(args: Any) -> Optional[str]:
+    """Gate the shell: bed must be up; a valid token logs in; else a password.
+
+    Returns the moniker on success, or None when the shell must not start.
+    A blank moniker or password re-prompts. Ctrl-D cancels the login. Nothing
+    sensitive is printed.
+    """
+    if not probe_bed(args):
+        _bed_unreachable(args)
         return None
-    if member.checkpassword(args, password, membermoniker=moniker) is not True:
+
+    token_path = getattr(args, "token_file", None) or default_token_file()
+    try:
+        moniker = _try_token(args, token_path)
+    except _BedDown:
         return None
-    return _set_session(moniker)
+    if moniker is not None:
+        return _set_session(moniker)
+
+    while True:
+        try:
+            moniker, password = prompt_credentials()
+        except EOFError:
+            sys.stderr.write("login cancelled\n")
+            return None
+        if not moniker or not password:
+            continue
+        if member.checkpassword(args, password, membermoniker=moniker) is not True:
+            return None
+        return _set_session(moniker)
