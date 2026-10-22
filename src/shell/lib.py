@@ -47,15 +47,18 @@ def init_screen(args: Any = None) -> None:
 
 
 def setbottombar(args, left="", stack=False):
-    def right():
-        currentmember = member.getcurrent(args)
+    def right(**kwargs):
+        # bottombar.render calls each fragment with keyword arguments (args, player,
+        # pool). Use the args it passes, else the args this shell was started with.
+        render_args = kwargs.get("args", args)
+        currentmember = member.getcurrent(render_args)
         if currentmember is None:
             return ""
         rightbuf = "| %s | %s" % (
             currentmember["moniker"],
             util.pluralize(currentmember["credits"], "credit", "credits"),
         )
-        if args.debug is True:
+        if render_args.debug is True:
             rightbuf += " | debug"
         return rightbuf
 
