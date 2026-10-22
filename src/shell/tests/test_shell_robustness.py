@@ -19,6 +19,15 @@ def args(tmp_path):
     return a
 
 
+def _bed_ok():
+    from unittest.mock import AsyncMock
+    svc = MagicMock()
+    svc.login = AsyncMock(return_value={"ok": True, "moniker": "alice", "token": "tok",
+                                        "session_id": "s" * 16, "expires_at": "2099-01-01T00:00:00Z",
+                                        "is_sysop": False, "balance": 0})
+    return svc
+
+
 @pytest.mark.unit
 def test_bed_is_probed_before_database_is_opened():
     import inspect
@@ -33,8 +42,8 @@ def test_blank_moniker_reprompts_until_a_value_is_given(args):
     answers = iter([("", ""), ("alice", "pw")])
     with patch.object(lib, "probe_bed", return_value=True), \
          patch.object(lib, "prompt_credentials", side_effect=lambda: next(answers)), \
-         patch.object(lib, "member") as m:
-        m.checkpassword.return_value = True
+         patch.object(lib, "password_login_client", return_value=_bed_ok()), \
+         patch.object(lib, "persist_token", return_value=True):
         assert lib.shell_login(args) == "alice"
 
 
@@ -43,8 +52,8 @@ def test_blank_password_reprompts(args):
     answers = iter([("alice", ""), ("alice", "pw")])
     with patch.object(lib, "probe_bed", return_value=True), \
          patch.object(lib, "prompt_credentials", side_effect=lambda: next(answers)), \
-         patch.object(lib, "member") as m:
-        m.checkpassword.return_value = True
+         patch.object(lib, "password_login_client", return_value=_bed_ok()), \
+         patch.object(lib, "persist_token", return_value=True):
         assert lib.shell_login(args) == "alice"
 
 

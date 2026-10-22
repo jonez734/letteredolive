@@ -2,6 +2,7 @@ import asyncio
 import getpass
 import os
 import sys
+import types
 from typing import Any, List, Optional
 
 from bbsengine6 import io, screen, member, module, util
@@ -11,6 +12,7 @@ from bed.client.probe import probe_bed
 from bed.client.authservice import BedAuthServiceClient
 from bed.client import get_bed_connection
 from bed.tools import _token
+from bed.client.connection import BedConnection
 
 
 PACKAGENAME = "shell"
@@ -206,6 +208,46 @@ class _BedDown(Exception):
     """bed stopped answering during the token check."""
 
 
+def open_login_connection(args: Any):
+    """A one-shot bed connection for a password login (closed by the caller)."""
+    return BedConnection(args)
+
+
+def password_login_client(conn: Any) -> BedAuthServiceClient:
+    return BedAuthServiceClient(conn)
+
+
+def persist_token(reply: dict, args: Any) -> bool:
+    """Save the token from a successful login, as casino does."""
+    from bed.tools import auth as _bed_auth_tool
+
+    bed_args = types.SimpleNamespace(
+        token_file=getattr(args, "token_file", None) or default_token_file(),
+        debug=False,
+    )
+    return _bed_auth_tool._persist_token(reply, bed_args)
+
+
+def _password_login(args: Any, moniker: str, password: str) -> Optional[str]:
+    """Log in through bed (server-side check), then save the token. None on refusal."""
+    conn = open_login_connection(args)
+    try:
+        reply = asyncio.run(password_login_client(conn).login(moniker, password))
+    finally:
+        try:
+            conn.force_close()
+        except Exception:
+            pass
+    if not reply.get("ok"):
+        io.echo("login refused", level="error")
+        return None
+    if not (reply.get("token") or "").strip():
+        io.echo("bed returned no token; login aborted", level="error")
+        return None
+    persist_token(reply, args)
+    return reply.get("moniker") or moniker
+
+
 def shell_login(args: Any) -> Optional[str]:
     """Gate the shell: bed must be up; a valid token logs in; else a password.
 
@@ -233,6 +275,7 @@ def shell_login(args: Any) -> Optional[str]:
             return None
         if not moniker or not password:
             continue
-        if member.checkpassword(args, password, membermoniker=moniker) is not True:
+        logged_in = _password_login(args, moniker, password)
+        if logged_in is None:
             return None
-        return _set_session(moniker)
+        return _set_session(logged_in)

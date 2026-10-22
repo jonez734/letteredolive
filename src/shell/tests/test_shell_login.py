@@ -31,6 +31,23 @@ def _reply(ok=True, moniker="alice"):
             "expires_at": "2099-01-01T00:00:00Z", "is_sysop": False}
 
 
+def _bed_login_ok(moniker="alice"):
+    """Patch bed's password login to succeed, and stop the token being written."""
+    from unittest.mock import AsyncMock
+    svc = MagicMock()
+    svc.login = AsyncMock(return_value={"ok": True, "moniker": moniker, "token": "tok-fresh",
+                                        "session_id": "s" * 16, "expires_at": "2099-01-01T00:00:00Z",
+                                        "is_sysop": False, "balance": 0})
+    return svc
+
+
+def _refused():
+    from unittest.mock import AsyncMock
+    svc = MagicMock()
+    svc.login = AsyncMock(return_value={"ok": False, "code": "bad_credentials"})
+    return svc
+
+
 @pytest.mark.unit
 def test_bed_unreachable_exits_1_without_prompting(args, capsys):
     with patch.object(lib, "probe_bed", return_value=False), \
@@ -63,8 +80,8 @@ def test_rejected_token_falls_back_to_password(args, tmp_path):
     with patch.object(lib, "probe_bed", return_value=True), \
          patch.object(lib, "reconnect", return_value={"ok": False, "code": "token_expired"}), \
          patch.object(lib, "prompt_credentials", return_value=("alice", "pw")), \
-         patch.object(lib, "member") as m:
-        m.checkpassword.return_value = True
+         patch.object(lib, "password_login_client", return_value=_bed_login_ok("alice")), \
+         patch.object(lib, "persist_token", return_value=True):
         assert lib.shell_login(args) == "alice"
 
 
@@ -73,8 +90,8 @@ def test_missing_token_file_prompts_for_password(args, tmp_path):
     args.token_file = str(tmp_path / "absent.token")
     with patch.object(lib, "probe_bed", return_value=True), \
          patch.object(lib, "prompt_credentials", return_value=("bob", "pw")), \
-         patch.object(lib, "member") as m:
-        m.checkpassword.return_value = True
+         patch.object(lib, "password_login_client", return_value=_bed_login_ok("bob")), \
+         patch.object(lib, "persist_token", return_value=True):
         assert lib.shell_login(args) == "bob"
 
 
@@ -83,8 +100,7 @@ def test_refused_password_returns_none(args, tmp_path):
     args.token_file = str(tmp_path / "absent.token")
     with patch.object(lib, "probe_bed", return_value=True), \
          patch.object(lib, "prompt_credentials", return_value=("bob", "wrong")), \
-         patch.object(lib, "member") as m:
-        m.checkpassword.return_value = False
+         patch.object(lib, "password_login_client", return_value=_refused()):
         assert lib.shell_login(args) is None
 
 
@@ -97,8 +113,7 @@ def test_loose_token_file_permissions_refused(args, tmp_path):
     with patch.object(lib, "probe_bed", return_value=True), \
          patch.object(lib, "reconnect") as rc, \
          patch.object(lib, "prompt_credentials", return_value=("x", "y")), \
-         patch.object(lib, "member") as m:
-        m.checkpassword.return_value = False
+         patch.object(lib, "password_login_client", return_value=_refused()):
         lib.shell_login(args)
     rc.assert_not_called()
 
@@ -112,8 +127,8 @@ def test_token_and_password_never_printed(args, tmp_path, capsys):
     with patch.object(lib, "probe_bed", return_value=True), \
          patch.object(lib, "reconnect", return_value={"ok": False, "code": "token_expired"}), \
          patch.object(lib, "prompt_credentials", return_value=("alice", "pw-SECRET-VALUE")), \
-         patch.object(lib, "member") as m:
-        m.checkpassword.return_value = True
+         patch.object(lib, "password_login_client", return_value=_bed_login_ok("alice")), \
+         patch.object(lib, "persist_token", return_value=True):
         lib.shell_login(args)
     out = capsys.readouterr()
     assert "tok-SECRET-VALUE" not in out.out + out.err
