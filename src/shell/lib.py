@@ -177,9 +177,16 @@ def reconnect(args: Any, token: str) -> dict:
 
 
 def prompt_credentials() -> tuple:
-    """Ask for moniker and password. The password is never echoed."""
-    moniker = input("moniker: ").strip()
-    password = getpass.getpass("password: ")
+    """Ask for moniker and password. A blank field asks again. The password is never echoed.
+
+    Ctrl-D raises EOFError, which the caller treats as cancel.
+    """
+    moniker = ""
+    while not moniker:
+        moniker = input("moniker: ").strip()
+    password = ""
+    while not password:
+        password = getpass.getpass("password: ")
     return moniker, password
 
 
