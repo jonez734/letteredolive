@@ -1,13 +1,13 @@
 import argparse
 from typing import Any
 
-from bbsengine6 import io, screen, database
+from bbsengine6 import io, database
 
 from . import lib
 
 
 def init(args: Any, **kwargs: Any) -> bool:
-    screen.init()
+    lib.init_screen(args)
     return True
 
 

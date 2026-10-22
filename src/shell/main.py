@@ -1,7 +1,7 @@
 import argparse
 from typing import Any
 
-from bbsengine6 import io, screen, util, module
+from bbsengine6 import io, util, module
 
 from . import lib
 
@@ -19,7 +19,7 @@ def buildargs(args: Any, **kwargs: Any) -> argparse.ArgumentParser | None:
 
 
 def main(args: Any, **kwargs: Any) -> bool | None:
-    screen.init()
+    lib.init_screen(args)
 
     done = False
     while not done:

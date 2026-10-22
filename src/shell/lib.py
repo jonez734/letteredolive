@@ -5,7 +5,8 @@ import sys
 import types
 from typing import Any, List, Optional
 
-from bbsengine6 import io, screen, member, module, util
+from bbsengine6 import io, member, module, util
+from bbsengine6 import bottombar as _bottombar
 from bbsengine6.member import _threadlocal
 
 from bed.client.probe import probe_bed
@@ -24,6 +25,27 @@ LOGIN_EXIT_CODE = 1
 #
 
 
+_screen_initialized: bool = False
+
+
+def init_screen(args: Any = None) -> None:
+    """Set the terminal scroll region once, so the bottom bar stays on the last line.
+
+    Same pattern as casino: the margins are set before the first setbottombar call.
+    """
+    global _screen_initialized
+    if _screen_initialized:
+        return
+    from bbsengine6.io import terminal
+
+    _screen_initialized = True
+    io.echo("{f6:3}{cursorup:3}", end="", flush=True)
+    h = terminal.lines() - 1
+    io.echo("{savecursor}", end="")
+    io.echo("{decstbm:%s,%s}" % (1, h), end="")
+    io.echo("{restorecursor}", flush=True, end="")
+
+
 def setbottombar(args, left="", stack=False):
     def right():
         currentmember = member.getcurrent(args)
@@ -39,10 +61,11 @@ def setbottombar(args, left="", stack=False):
 
     if args.debug is True:
         io.echo(
-            f"shell.lib.setarea.right.100: left={left!r} right={right!r} stack={stack!r}",
+            f"shell.lib.setarea.right.100: left={left!r} stack={stack!r}",
             level="debug",
         )
-    screen.setbottombar(left, right)
+    _bottombar.register_bottombar_fragment(right)
+    _bottombar.setbottombar(args, left)
 
 
 commands = {
