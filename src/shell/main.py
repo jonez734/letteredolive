@@ -63,23 +63,11 @@ def main(args: Any, **kwargs: Any) -> None:
             io.echo(f"shell.100: {buf=}", level="debug")
 
         argv = buf.split(" ")
-        if argv[0] not in lib.commands:
-            known_bbs_games = [
-                "murdermotel",
-                "empyre",
-                "con",
-                "repo",
-                "weather",
-                "banderole",
-                "moneyday",
-            ]
-            if argv[0] in known_bbs_games:
-                io.echo(
-                    f"'{argv[0]}' is not installed or not accessible. Run: sudo pip install {argv[0]}",
-                    level="error",
-                )
-            else:
-                io.echo(f"unknown command '{argv[0]}'", level="error")
+        decision = lib.dispatch_message(argv[0])
+        if decision == "unknown":
+            io.echo(f"unknown command '{argv[0]}'", level="error")
+            continue
+        if decision == "not_installed":
             continue
 
         v = lib.commands[argv[0]]

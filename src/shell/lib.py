@@ -80,15 +80,42 @@ commands = {
 }
 
 
+def visible_commands(args: Any) -> List[str]:
+    """Commands the user may run: listed in the registry and installed.
+
+    A command whose module is missing stays in ``commands`` but is hidden here,
+    so help and tab completion show only what can run. ``logout`` and ``exit``
+    have no module and are always visible.
+    """
+    out: List[str] = []
+    for name, spec in commands.items():
+        prg = spec.get("prg")
+        if prg is None or module.check(args, prg) is not False:
+            out.append(name)
+    return out
+
+
+def dispatch_message(name: str) -> str:
+    """Decide what a typed command does: 'run', 'not_installed', or 'unknown'."""
+    if name not in commands:
+        return "unknown"
+    spec = commands[name]
+    prg = spec.get("prg")
+    if prg is None:
+        return "run"
+    if module.check(None, prg) is False:
+        io.echo(f"'{name}' is not installed on this system.", level="error")
+        return "not_installed"
+    return "run"
+
+
 class shellCommandCompleter:
     def __init__(self, args: Any) -> None:
-        pass
+        self._args = args
 
     @classmethod
     def complete(cls, text: str, state: int) -> Optional[str]:
-        vocab: List[str] = []
-        for c in commands:
-            vocab.append(c)
+        vocab = visible_commands(None)
         results = [x for x in vocab if x.startswith(text)] + [None]
         return results[state]
 
@@ -105,11 +132,9 @@ def help(**kwargs: Any) -> None:
             maxlen = klen
 
     util.heading("shell commands")
+    shown = set(visible_commands(args))
     for k, v in commands.items():
-        prg = v["prg"] if "prg" in v else None
-        if args is not None and args.debug is True:
-            io.echo(f"shell.lib.help.100: {args=} {prg=}", level="debug")
-        if prg is not None and module.check(args, prg) is False:
+        if k not in shown:
             continue
         n = k.ljust(maxlen)
         if "help" in v:
