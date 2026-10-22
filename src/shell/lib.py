@@ -107,6 +107,10 @@ commands = {
         "prg": "moneyday",
         "help": "displays a calendar showing e.g. the 2nd wednesday of a month",
     },
+    "message": {
+        "handler": "run_message",
+        "help": 'send a message: message --to bob[,carol] --body "text" [--urgency ROUTINE]',
+    },
     "logout": {"help": "logout of the system"},
     "exit": {"help": "exit shell"},
 }
@@ -139,6 +143,8 @@ def dispatch_message(name: str) -> str:
         return "disabled"
     prg = spec.get("prg")
     if prg is None:
+        return "run"
+    if spec.get("handler") is not None:
         return "run"
     if module.check(None, prg) is False:
         io.echo(f"'{name}' is not installed on this system.", level="error")
@@ -430,3 +436,82 @@ def _show_welcome(args: Any, moniker: str) -> None:
     if info is None:
         return
     _welcome(moniker, _last_login_for(moniker), info)
+
+
+def parse_message_args(argv: List[str]) -> dict:
+    """Parse ``message --to bob[,carol] [--to dana] --body "text" [--urgency ROUTINE]``.
+
+    ``argv`` includes the command name as its first item, which is skipped. Raises ValueError
+    with a usage message when ``--to`` or ``--body`` is missing.
+    """
+    recipients: List[str] = []
+    body: Optional[str] = None
+    urgency = "ROUTINE"
+    items = list(argv[1:])
+    i = 0
+    while i < len(items):
+        key = items[i]
+        if key in ("--to", "--body", "--urgency"):
+            if i + 1 >= len(items):
+                raise ValueError(f"{key} needs a value")
+            value = items[i + 1]
+            i += 2
+            if key == "--to":
+                recipients += [r.strip() for r in value.split(",") if r.strip()]
+            elif key == "--body":
+                body = value
+            else:
+                urgency = value.strip().upper()
+            continue
+        raise ValueError(f"unknown argument {key!r}")
+    if not recipients:
+        raise ValueError('usage: message --to bob[,carol] --body "text" (--to is required)')
+    if body is None or not body.strip():
+        raise ValueError('usage: message --to bob --body "text" (--body is required)')
+    return {"recipients": recipients, "body": body, "urgency": urgency}
+
+
+def _read_token(args: Any) -> str:
+    """The signed-in member's bearer token, from the token file resolved at startup."""
+    path = getattr(args, "token_file", None) or default_token_file()
+    return _token.read_token_file(path) or ""
+
+
+def _message_client(args: Any) -> Any:
+    """A BedMessageServiceClient bound to the session token (the same bed connection the shell uses)."""
+    from bed.client.messageservice import BedMessageServiceClient
+
+    return BedMessageServiceClient(
+        get_bed_connection(args),
+        token=_read_token(args),
+        token_file=getattr(args, "token_file", None),
+    )
+
+
+def run_message(args: Any, argv: List[str]) -> bool:
+    """The ``message`` command: send a message as the signed-in member through the bed daemon."""
+    try:
+        parsed = parse_message_args(argv)
+    except ValueError as e:
+        io.echo(str(e), level="error")
+        return False
+    client = _message_client(args)
+    reply = asyncio.run(
+        client.send_message(
+            recipients=parsed["recipients"],
+            content=parsed["body"],
+            channel="member:direct",
+            urgency=parsed["urgency"],
+        )
+    )
+    if not reply.get("ok"):
+        io.echo(
+            f"message not sent: {reply.get('code') or 'unknown'}: {reply.get('message') or ''}".rstrip(": "),
+            level="error",
+        )
+        return False
+    io.echo(
+        f"sent #{int(reply.get('message_id', 0))} to {', '.join(parsed['recipients'])}",
+        level="ok",
+    )
+    return True

@@ -74,11 +74,13 @@ def main(args: Any, **kwargs: Any) -> bool | None:
         v = lib.commands[argv[0]]
         if args.debug is True:
             io.echo(f"{v=}", level="debug")
-        prg = v["prg"]
         if args.debug is True:
             io.echo(f"shell.100: {argv=}", level="debug")
         try:
-            module.runmodule(args, prg, argv=argv, pool=kwargs.get("pool"))
+            if v.get("handler") == "run_message":
+                lib.run_message(args, argv)
+            else:
+                module.runmodule(args, v["prg"], argv=argv, pool=kwargs.get("pool"))
         except EOFError:
             raise
         except KeyboardInterrupt:
