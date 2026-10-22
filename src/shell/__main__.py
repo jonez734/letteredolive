@@ -28,13 +28,14 @@ def main() -> None:
     parser = buildargs(None)
     args = parser.parse_args()
 
+    # Anonymous sessions are not allowed: bed must be up, and the user must be
+    # authenticated (valid token or password) before the command loop starts.
+    # This runs before the try block, so a refusal exits without the terminal
+    # cleanup below (which needs a real terminal).
+    if lib.shell_login(args) is None:
+        raise SystemExit(lib.LOGIN_EXIT_CODE)
+
     try:
-        # Anonymous sessions are not allowed: bed must be up, and the user
-        # must be authenticated (valid token or password) before the command
-        # loop starts. bed is probed first, so its message shows even when
-        # PostgreSQL is down too.
-        if lib.shell_login(args) is None:
-            raise SystemExit(lib.LOGIN_EXIT_CODE)
         with database.getpool(args) as pool:
             init(args, pool=pool)
             lib.runmodule(args, "main", pool=pool)
