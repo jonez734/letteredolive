@@ -13,7 +13,7 @@ def init(args: Any, **kwargs: Any) -> bool:
     return True
 
 
-def buildargs(args: Any = None, **kwargs: Any) -> None:
+def buildargs(args: Any, **kwargs: Any) -> None:
     return None
 
 

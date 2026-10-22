@@ -11,7 +11,7 @@ def init(args: Optional[Any] = None, **kw: Any) -> bool:
     return True
 
 
-def buildargs(args: Optional[Any] = None, **kw: Any) -> Any:
+def buildargs(args: Optional[Any], **kw: Any) -> Any:
     parser: Any = __import__("argparse").ArgumentParser("shell")
     parser.add_argument("--verbose", action="store_true", dest="verbose")
     parser.add_argument("--debug", action="store_true", dest="debug")

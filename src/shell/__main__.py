@@ -14,7 +14,7 @@ def access(args: Any, op: str, **kwargs: Any) -> bool:
     return True
 
 
-def buildargs(args: Any = None, **kw: Any) -> Any:
+def buildargs(args: Any, **kw: Any) -> Any:
     parser = __import__("argparse").ArgumentParser("letteredolive")
     parser.add_argument("--debug", default=False)
     parser.add_argument("--bed-host", default="127.0.0.1", help="bed daemon host")
