@@ -17,9 +17,18 @@ fails and `empyre` is reported as "not available". The body already returns an
 
 Remove `=None` from `args`, and annotate `-> argparse.ArgumentParser | None`.
 
+### Validation (run through the installed package, read-only)
+
+- `empyre.buildargs`: FAIL, `args=None` default.
+- `empyre.init`, `empyre.main`, `empyre.access`: PASS.
+- `empyre.weather.buildargs`: FAIL, `args=None` default (and an extra
+  `subparser=None` parameter, which `**kwargs` allows). Same fix as above.
+- `empyre.weather.init`, `.main`, `.access`: PASS.
+
 ### Status
 
-Deferred to the `empyre` repo; the author is fixing it soon.
+Deferred to the `empyre` repo; the author is fixing it soon. The shell
+`weather` command is disabled in the meantime (see the registry).
 
 ---
 
