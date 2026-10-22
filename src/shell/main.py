@@ -68,7 +68,7 @@ def main(args: Any, **kwargs: Any) -> bool | None:
         if decision == "unknown":
             io.echo(f"unknown command '{argv[0]}'", level="error")
             continue
-        if decision == "not_installed":
+        if decision in ("not_installed", "disabled"):
             continue
 
         v = lib.commands[argv[0]]

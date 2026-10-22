@@ -84,14 +84,16 @@ commands = {
     "weather": {
         "prg": "almanac.weather",
         "help": "weather report for a given location",
+        "disabled": True,
     },
     "banderole": {
         "prg": "banderole",
         "help": "print short string in large letters (from figlet)",
+        "disabled": True,
     },
     #    "votingbooth": {"prg": "votingbooth", "help": "vote on various topics", "aka":"vb"},
     #    "blackjack":   {"prg": "casino.blackjack",   "help": "the game of blackjack, no gambling"},
-    "repo": {"prg": "repo", "help": "software repository"},
+    "repo": {"prg": "repo", "help": "software repository", "disabled": True},
     #    "casino":      {"prg": "casino",      "help": "use the casino"},
     "murdermotel": {
         "prg": "murdermotel",
@@ -115,6 +117,8 @@ def visible_commands(args: Any) -> List[str]:
     """
     out: List[str] = []
     for name, spec in commands.items():
+        if spec.get("disabled") is True:
+            continue
         prg = spec.get("prg")
         if prg is None or module.check(args, prg) is not False:
             out.append(name)
@@ -126,6 +130,9 @@ def dispatch_message(name: str) -> str:
     if name not in commands:
         return "unknown"
     spec = commands[name]
+    if spec.get("disabled") is True:
+        io.echo(f"'{name}' is disabled (not installed).", level="error")
+        return "disabled"
     prg = spec.get("prg")
     if prg is None:
         return "run"
@@ -216,8 +223,20 @@ def prompt_credentials() -> tuple:
     return moniker, password
 
 
-def _set_session(moniker: str) -> str:
+def _lookup_member_id(args: Any, moniker: str) -> Any:
+    """The member id for ``moniker``, as member.getcurrent expects it."""
+    rec = member.getbymoniker(args, moniker, fields="id")
+    return rec["id"] if rec else None
+
+
+def _set_session(moniker: str, args: Any = None) -> str:
+    """Record the logged-in member for the session.
+
+    member.getcurrent reads the member id from _threadlocal.id, so set that too.
+    """
     _threadlocal.moniker = moniker
+    member_id = _lookup_member_id(args, moniker) if args is not None else None
+    _threadlocal.id = member_id
     return moniker
 
 
@@ -337,7 +356,7 @@ def shell_login(args: Any) -> Optional[str]:
     except _BedDown:
         return None
     if moniker is not None:
-        return _set_session(moniker)
+        return _set_session(moniker, args)
 
     while True:
         try:
@@ -350,4 +369,4 @@ def shell_login(args: Any) -> Optional[str]:
         logged_in = _password_login(args, moniker, password)
         if logged_in is None:
             return None
-        return _set_session(logged_in)
+        return _set_session(logged_in, args)
