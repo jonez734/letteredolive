@@ -199,6 +199,17 @@ def runmodule(args: Any, modulename: str, **kwargs: Any) -> bool:
     return module.runmodule(args, x, **kwargs)
 
 
+def resolve_token_file(args: Any) -> str:
+    """Set ``args.token_file`` once, at startup: the --token-file value, else the XDG default.
+
+    Every later bed call reads the token from this path, so the balance lookup after login
+    sends the same token the login wrote.
+    """
+    if not getattr(args, "token_file", None):
+        args.token_file = default_token_file()
+    return args.token_file
+
+
 def default_token_file() -> str:
     """Token path: $XDG_RUNTIME_DIR/bed.token, else /tmp/bed-<uid>/bed.token."""
     runtime = os.environ.get("XDG_RUNTIME_DIR", "").strip()

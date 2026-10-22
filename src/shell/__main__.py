@@ -28,6 +28,7 @@ def buildargs(args: Any, **kw: Any) -> argparse.ArgumentParser | None:
 def main() -> None:
     parser = buildargs(None)
     args = parser.parse_args()
+    lib.resolve_token_file(args)
 
     # Anonymous sessions are not allowed: bed must be up, and the user must be
     # authenticated (valid token or password) before the command loop starts.
