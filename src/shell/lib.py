@@ -51,12 +51,16 @@ def setbottombar(args, left="", stack=False):
         # bottombar.render calls each fragment with keyword arguments (args, player,
         # pool). Use the args it passes, else the args this shell was started with.
         render_args = kwargs.get("args", args)
-        currentmember = member.getcurrent(render_args)
-        if currentmember is None:
+        moniker = member.getcurrentmoniker(render_args)
+        if moniker is None:
             return ""
-        rightbuf = "| %s | %s" % (
-            currentmember["moniker"],
-            util.pluralize(currentmember["credits"], "credit", "credits"),
+        balance = member.getbalance(render_args, moniker, pool=kwargs.get("pool"))
+        if balance is None:
+            return ""
+        rightbuf = "| %s | %d %s" % (
+            moniker,
+            balance,
+            "credit" if balance == 1 else "credits",
         )
         if render_args.debug is True:
             rightbuf += " | debug"
@@ -223,20 +227,13 @@ def prompt_credentials() -> tuple:
     return moniker, password
 
 
-def _lookup_member_id(args: Any, moniker: str) -> Any:
-    """The member id for ``moniker``, as member.getcurrent expects it."""
-    rec = member.getbymoniker(args, moniker, fields="id")
-    return rec["id"] if rec else None
-
-
 def _set_session(moniker: str, args: Any = None) -> str:
-    """Record the logged-in member for the session.
+    """Record the logged-in moniker for the session.
 
-    member.getcurrent reads the member id from _threadlocal.id, so set that too.
+    The member is looked up by moniker (member.getcurrentmoniker and getbalance),
+    so no member id is kept here.
     """
     _threadlocal.moniker = moniker
-    member_id = _lookup_member_id(args, moniker) if args is not None else None
-    _threadlocal.id = member_id
     return moniker
 
 

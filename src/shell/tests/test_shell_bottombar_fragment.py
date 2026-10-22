@@ -12,7 +12,8 @@ def test_right_fragment_accepts_args_keyword_from_render():
     registered = []
     with patch.object(lib._bottombar, "register_bottombar_fragment", side_effect=lambda f: registered.append(f) or f), \
          patch.object(lib._bottombar, "setbottombar", return_value=True), \
-         patch.object(lib.member, "getcurrent", return_value={"moniker": "jam", "credits": 3}):
+         patch.object(lib.member, "getcurrentmoniker", return_value="jam"), \
+         patch.object(lib.member, "getbalance", return_value=3):
         args = MagicMock(debug=False)
         lib.setbottombar(args, "falcon")
         fragment = registered[-1]
