@@ -261,15 +261,23 @@ def persist_token(reply: dict, args: Any) -> bool:
 
 
 def _password_login(args: Any, moniker: str, password: str) -> Optional[str]:
-    """Log in through bed (server-side check), then save the token. None on refusal."""
+    """Log in through bed (server-side check), then save the token. None on refusal.
+
+    The login and the connection close run in one coroutine, on one event loop.
+    Closing after asyncio.run has ended that loop fails with "attached to a different loop".
+    """
     conn = open_login_connection(args)
-    try:
-        reply = asyncio.run(password_login_client(conn).login(moniker, password))
-    finally:
+
+    async def _login_and_close() -> dict:
         try:
-            conn.force_close()
-        except Exception:
-            pass
+            return await password_login_client(conn).login(moniker, password)
+        finally:
+            try:
+                conn.force_close()
+            except Exception:
+                pass
+
+    reply = asyncio.run(_login_and_close())
     if not reply.get("ok"):
         io.echo("login refused", level="error")
         return None

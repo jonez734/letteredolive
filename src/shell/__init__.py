@@ -1,3 +1,4 @@
+import argparse
 from typing import Any
 
 from . import lib
@@ -11,7 +12,7 @@ def access(args: Any, op: str, **kw: Any) -> bool:
     return True
 
 
-def buildargs(args: Any, **kw: Any) -> None:
+def buildargs(args: Any, **kw: Any) -> argparse.ArgumentParser | None:
     return None
 
 

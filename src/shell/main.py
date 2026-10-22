@@ -1,3 +1,4 @@
+import argparse
 from typing import Any
 
 from bbsengine6 import io, screen, util, module
@@ -13,7 +14,7 @@ def init(args: Any, **kwargs: Any) -> bool:
     return True
 
 
-def buildargs(args: Any, **kwargs: Any) -> None:
+def buildargs(args: Any, **kwargs: Any) -> argparse.ArgumentParser | None:
     return None
 
 
