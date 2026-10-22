@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import importlib
 import inspect
+import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -31,15 +32,12 @@ def test_password_login_closes_connection_on_the_loop_that_used_it():
         loops["login"] = asyncio.get_running_loop()
         return {"ok": False, "code": "bad_credentials"}
 
+    async def record_ws_close():
+        loops["close"] = asyncio.get_running_loop()
+
     conn = MagicMock()
-
-    def record_close():
-        try:
-            loops["close"] = asyncio.get_running_loop()
-        except RuntimeError:
-            loops["close"] = None
-
-    conn.force_close.side_effect = record_close
+    conn._ws = MagicMock()
+    conn._ws.close = record_ws_close
     svc = MagicMock()
     svc.login = fake_login
     with patch.object(lib, "open_login_connection", return_value=conn), \
@@ -47,3 +45,34 @@ def test_password_login_closes_connection_on_the_loop_that_used_it():
         lib._password_login(MagicMock(), "alice", "pw")
     assert loops["close"] is not None, "close ran outside any event loop"
     assert loops["close"] is loops["login"], "close must run on the login's loop"
+
+
+@pytest.mark.unit
+def test_login_connection_is_closed_with_await_not_force_close():
+    """Closing the login socket must await the websocket close on the login loop.
+
+    force_close schedules the close on a new loop in a thread, which raises
+    "attached to a different loop" when the websocket belongs to the login loop.
+    """
+    import ast
+    import inspect
+    tree = ast.parse(inspect.getsource(lib._password_login))
+    calls = [ast.unparse(n.func) for n in ast.walk(tree) if isinstance(n, ast.Call)]
+    assert not any("force_close" in c for c in calls)
+    assert any(c.endswith(".close") for c in calls)
+    assert any(isinstance(n, ast.Await) and "close" in ast.unparse(n) for n in ast.walk(tree))
+
+
+@pytest.mark.unit
+def test_main_passes_the_loader_signature_check():
+    """shell.main and shell.module must pass bbsengine6's signature check for main."""
+    import sys
+    from pathlib import Path as _P
+    bbs_src = _P(__file__).resolve().parents[4] / "bbsengine6" / "py" / "src"
+    if str(bbs_src) not in sys.path:
+        sys.path.insert(0, str(bbs_src))
+    from bbsengine6 import module as bbs_module
+    import shell.main as shell_main_mod
+    import shell.module as shell_module_mod
+    for mod in (shell_main_mod, shell_module_mod):
+        assert bbs_module._check_func_signature(mod.main, bbs_module._stub_main), mod.__name__

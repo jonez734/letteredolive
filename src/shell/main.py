@@ -18,7 +18,7 @@ def buildargs(args: Any, **kwargs: Any) -> argparse.ArgumentParser | None:
     return None
 
 
-def main(args: Any, **kwargs: Any) -> None:
+def main(args: Any, **kwargs: Any) -> bool | None:
     screen.init()
 
     done = False

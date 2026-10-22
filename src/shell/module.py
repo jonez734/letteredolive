@@ -29,7 +29,7 @@ def buildargs(args: Optional[Any], **kw: Any) -> argparse.ArgumentParser | None:
     return parser
 
 
-def main(args: Any, **kw: Any) -> None:
+def main(args: Any, **kw: Any) -> bool | None:
     if args is not None and "debug" in args and args.debug is True:
         io.echo(f"shell.main.100: {args=}", level="debug")
 

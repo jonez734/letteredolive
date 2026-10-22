@@ -100,10 +100,14 @@ def test_login_connection_is_closed(args):
     svc = MagicMock()
     svc.login = AsyncMock(return_value=_ok_reply())
     conn = MagicMock()
+    ws = MagicMock()
+    ws.close = AsyncMock()
+    conn._ws = ws
     with patch.object(lib, "probe_bed", return_value=True), \
          patch.object(lib, "prompt_credentials", return_value=("alice", "pw")), \
          patch.object(lib, "password_login_client", return_value=svc), \
          patch.object(lib, "persist_token", return_value=True), \
          patch.object(lib, "open_login_connection", return_value=conn):
         lib.shell_login(args)
-    conn.force_close.assert_called_once()
+    ws.close.assert_awaited_once()
+    assert conn._ws is None

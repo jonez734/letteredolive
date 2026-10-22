@@ -272,10 +272,16 @@ def _password_login(args: Any, moniker: str, password: str) -> Optional[str]:
         try:
             return await password_login_client(conn).login(moniker, password)
         finally:
-            try:
-                conn.force_close()
-            except Exception:
-                pass
+            # Await the websocket close on this loop. bed's force_close would
+            # schedule the close on another loop and fail with "attached to a
+            # different loop".
+            ws = getattr(conn, "_ws", None)
+            conn._ws = None
+            if ws is not None:
+                try:
+                    await ws.close()
+                except Exception:
+                    pass
 
     reply = asyncio.run(_login_and_close())
     if not reply.get("ok"):
