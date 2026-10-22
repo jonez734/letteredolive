@@ -332,7 +332,29 @@ def _password_login(args: Any, moniker: str, password: str) -> Optional[str]:
         io.echo("bed returned no token; login aborted", level="error")
         return None
     persist_token(reply, args)
+    _LAST_LOGIN["value"] = reply.get("last_login")
     return reply.get("moniker") or moniker
+
+
+_LAST_LOGIN: dict = {"value": None}
+
+
+def _last_login_for(moniker: str):
+    """The previous password login (ISO time) bed reported for this login, or None."""
+    return _LAST_LOGIN.get("value")
+
+
+def _welcome(moniker: str, last_login, info: dict) -> None:
+    """Print the welcome line: moniker, last login, and the balance with its source.
+
+    Never includes the password or the token.
+    """
+    if info["source"] == "credits":
+        balance_text = f"credits: {info['balance']}"
+    else:
+        balance_text = f"bank balance: {info['balance']}"
+    when = last_login if last_login else "never (first login)"
+    io.echo(f"welcome back {moniker}! last login: {when}, {balance_text}", level="ok")
 
 
 def shell_login(args: Any) -> Optional[str]:
@@ -365,4 +387,13 @@ def shell_login(args: Any) -> Optional[str]:
         logged_in = _password_login(args, moniker, password)
         if logged_in is None:
             return None
+        _show_welcome(args, logged_in)
         return _set_session(logged_in, args)
+
+
+def _show_welcome(args: Any, moniker: str) -> None:
+    """Show the welcome line for a password login. Balance lookup failure is not fatal."""
+    info = member.getbalance_info(args, moniker)
+    if info is None:
+        return
+    _welcome(moniker, _last_login_for(moniker), info)

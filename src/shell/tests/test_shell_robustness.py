@@ -41,6 +41,7 @@ def test_bed_is_probed_before_database_is_opened():
 def test_blank_moniker_reprompts_until_a_value_is_given(args):
     answers = iter([("", ""), ("alice", "pw")])
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "prompt_credentials", side_effect=lambda: next(answers)), \
          patch.object(lib, "password_login_client", return_value=_bed_ok()), \
          patch.object(lib, "persist_token", return_value=True):
@@ -51,6 +52,7 @@ def test_blank_moniker_reprompts_until_a_value_is_given(args):
 def test_blank_password_reprompts(args):
     answers = iter([("alice", ""), ("alice", "pw")])
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "prompt_credentials", side_effect=lambda: next(answers)), \
          patch.object(lib, "password_login_client", return_value=_bed_ok()), \
          patch.object(lib, "persist_token", return_value=True):
@@ -60,6 +62,7 @@ def test_blank_password_reprompts(args):
 @pytest.mark.unit
 def test_ctrl_d_at_login_exits_with_plain_message(args, capsys):
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "prompt_credentials", side_effect=EOFError):
         assert lib.shell_login(args) is None
     err = capsys.readouterr().err
@@ -74,6 +77,7 @@ def test_reconnect_network_error_is_treated_as_bed_unreachable(args, tmp_path, c
     os.chmod(tok, 0o600)
     args.token_file = str(tok)
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "reconnect", side_effect=ConnectionError("dropped")), \
          patch.object(lib, "prompt_credentials") as pc:
         assert lib.shell_login(args) is None
@@ -88,6 +92,7 @@ def test_rejected_token_file_is_deleted(args, tmp_path):
     os.chmod(tok, 0o600)
     args.token_file = str(tok)
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "reconnect", return_value={"ok": False, "code": "token_expired"}), \
          patch.object(lib, "prompt_credentials", side_effect=[("", ""), EOFError()]):
         lib.shell_login(args)
@@ -97,6 +102,7 @@ def test_rejected_token_file_is_deleted(args, tmp_path):
 @pytest.mark.unit
 def test_oserror_reading_token_is_treated_as_no_token(args, capsys):
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib._token, "read_token_file", side_effect=OSError("io")), \
          patch.object(lib, "reconnect") as rc, \
          patch.object(lib, "prompt_credentials", side_effect=[("", ""), EOFError()]):

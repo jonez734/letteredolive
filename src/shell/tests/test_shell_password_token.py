@@ -35,6 +35,7 @@ def test_password_login_uses_bed_login_not_checkpassword(args):
     svc = MagicMock()
     svc.login = AsyncMock(return_value=_ok_reply())
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "prompt_credentials", return_value=("alice", "pw")), \
          patch.object(lib, "password_login_client", return_value=svc), \
          patch.object(lib, "persist_token", return_value=True), \
@@ -49,6 +50,7 @@ def test_successful_password_login_persists_token(args):
     svc = MagicMock()
     svc.login = AsyncMock(return_value=_ok_reply())
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "prompt_credentials", return_value=("alice", "pw")), \
          patch.object(lib, "password_login_client", return_value=svc), \
          patch.object(lib, "persist_token", return_value=True) as persist:
@@ -62,6 +64,7 @@ def test_refused_password_saves_nothing(args, tmp_path):
     svc = MagicMock()
     svc.login = AsyncMock(return_value={"ok": False, "code": "bad_credentials"})
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "prompt_credentials", side_effect=[("alice", "wrong"), EOFError()]), \
          patch.object(lib, "password_login_client", return_value=svc), \
          patch.object(lib, "persist_token") as persist:
@@ -74,6 +77,7 @@ def test_malformed_reply_without_token_saves_nothing(args):
     svc = MagicMock()
     svc.login = AsyncMock(return_value={"ok": True, "moniker": "alice"})
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "prompt_credentials", return_value=("alice", "pw")), \
          patch.object(lib, "password_login_client", return_value=svc), \
          patch.object(lib, "persist_token") as persist:
@@ -86,6 +90,7 @@ def test_token_and_password_not_printed(args, capsys):
     svc = MagicMock()
     svc.login = AsyncMock(return_value=_ok_reply())
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "prompt_credentials", return_value=("alice", "pw-SECRET")), \
          patch.object(lib, "password_login_client", return_value=svc), \
          patch.object(lib, "persist_token", return_value=True):
@@ -104,6 +109,7 @@ def test_login_connection_is_closed(args):
     ws.close = AsyncMock()
     conn._ws = ws
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "prompt_credentials", return_value=("alice", "pw")), \
          patch.object(lib, "password_login_client", return_value=svc), \
          patch.object(lib, "persist_token", return_value=True), \

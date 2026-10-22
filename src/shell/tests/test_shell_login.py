@@ -65,6 +65,7 @@ def test_valid_token_logs_in_without_password(args, tmp_path):
     os.chmod(tok, 0o600)
     args.token_file = str(tok)
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "reconnect", return_value=_reply()), \
          patch.object(lib, "prompt_credentials") as gp:
         assert lib.shell_login(args) == "alice"
@@ -78,6 +79,7 @@ def test_rejected_token_falls_back_to_password(args, tmp_path):
     os.chmod(tok, 0o600)
     args.token_file = str(tok)
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "reconnect", return_value={"ok": False, "code": "token_expired"}), \
          patch.object(lib, "prompt_credentials", return_value=("alice", "pw")), \
          patch.object(lib, "password_login_client", return_value=_bed_login_ok("alice")), \
@@ -89,6 +91,7 @@ def test_rejected_token_falls_back_to_password(args, tmp_path):
 def test_missing_token_file_prompts_for_password(args, tmp_path):
     args.token_file = str(tmp_path / "absent.token")
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "prompt_credentials", return_value=("bob", "pw")), \
          patch.object(lib, "password_login_client", return_value=_bed_login_ok("bob")), \
          patch.object(lib, "persist_token", return_value=True):
@@ -99,6 +102,7 @@ def test_missing_token_file_prompts_for_password(args, tmp_path):
 def test_refused_password_returns_none(args, tmp_path):
     args.token_file = str(tmp_path / "absent.token")
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "prompt_credentials", return_value=("bob", "wrong")), \
          patch.object(lib, "password_login_client", return_value=_refused()):
         assert lib.shell_login(args) is None
@@ -111,6 +115,7 @@ def test_loose_token_file_permissions_refused(args, tmp_path):
     os.chmod(tok, 0o644)
     args.token_file = str(tok)
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "reconnect") as rc, \
          patch.object(lib, "prompt_credentials", return_value=("x", "y")), \
          patch.object(lib, "password_login_client", return_value=_refused()):
@@ -125,6 +130,7 @@ def test_token_and_password_never_printed(args, tmp_path, capsys):
     os.chmod(tok, 0o600)
     args.token_file = str(tok)
     with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "_show_welcome"), \
          patch.object(lib, "reconnect", return_value={"ok": False, "code": "token_expired"}), \
          patch.object(lib, "prompt_credentials", return_value=("alice", "pw-SECRET-VALUE")), \
          patch.object(lib, "password_login_client", return_value=_bed_login_ok("alice")), \
