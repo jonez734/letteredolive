@@ -55,6 +55,7 @@ def main(args: Any, **kwargs: Any) -> None:
         #      continue
         elif buf in ("exit", "logout", "lo", "quit", "q", "o!", "o"):
             io.echo("logout")
+            lib.clear_session()
             done = True
             break
 

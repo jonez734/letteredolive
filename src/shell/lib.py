@@ -1,9 +1,20 @@
+import asyncio
+import getpass
+import os
+import sys
 from typing import Any, List, Optional
 
 from bbsengine6 import io, screen, member, module, util
+from bbsengine6.member import _threadlocal
+
+from bed.client.probe import probe_bed
+from bed.client.authservice import BedAuthServiceClient
+from bed.client import get_bed_connection
+from bed.tools import _token
 
 
 PACKAGENAME = "shell"
+LOGIN_EXIT_CODE = 1
 # @see https://sites.google.com/site/xiangyangsite/home/technical-tips/software-development/python/python-readline-completions
 # @see https://docs.python.org/3.3/howto/argparse.html#introducing-positional-arguments
 # @see https://docs.python.org/3.3/library/argparse.html#module-argparse
@@ -122,3 +133,70 @@ def runmodule(args: Any, modulename: str, **kwargs: Any) -> bool:
         return False
 
     return module.runmodule(args, x, **kwargs)
+
+
+def default_token_file() -> str:
+    """Token path: $XDG_RUNTIME_DIR/bed.token, else /tmp/bed-<uid>/bed.token."""
+    runtime = os.environ.get("XDG_RUNTIME_DIR", "").strip()
+    if runtime and os.path.isdir(runtime) and os.access(runtime, os.W_OK):
+        return os.path.join(runtime, "bed.token")
+    return f"/tmp/bed-{os.getuid()}/bed.token"
+
+
+def reconnect(args: Any, token: str) -> dict:
+    """Ask bed to validate ``token``. Returns bed's reply dict."""
+    svc = BedAuthServiceClient(get_bed_connection(args))
+    return asyncio.run(svc.reconnect(token))
+
+
+def prompt_credentials() -> tuple:
+    """Ask for moniker and password. The password is never echoed."""
+    moniker = input("moniker: ").strip()
+    password = getpass.getpass("password: ")
+    return moniker, password
+
+
+def _set_session(moniker: str) -> str:
+    _threadlocal.moniker = moniker
+    return moniker
+
+
+def clear_session() -> None:
+    """Forget the logged-in moniker (logout / exit)."""
+    if hasattr(_threadlocal, "moniker"):
+        del _threadlocal.moniker
+
+
+def shell_login(args: Any) -> Optional[str]:
+    """Gate the shell: bed must be up; a valid token logs in; else a password.
+
+    Returns the moniker on success, or None when the shell must not start.
+    Prints nothing sensitive.
+    """
+    host = getattr(args, "bed_host", "127.0.0.1")
+    port = getattr(args, "bed_port", 8765)
+    if not probe_bed(args):
+        sys.stderr.write(
+            f"bed is not reachable at {host}:{port}; the shell cannot start. "
+            "Start the bed service and try again.\n"
+        )
+        return None
+
+    token_path = getattr(args, "token_file", None) or default_token_file()
+    token = ""
+    try:
+        token = _token.read_token_file(token_path)
+    except PermissionError as e:
+        io.echo(f"token file refused: {e}", level="error")
+        token = ""
+    if token:
+        reply = reconnect(args, token)
+        if reply.get("ok") and reply.get("moniker"):
+            return _set_session(reply["moniker"])
+
+    moniker, password = prompt_credentials()
+    if not moniker or not password:
+        return None
+    if member.checkpassword(args, password, membermoniker=moniker) is not True:
+        return None
+    return _set_session(moniker)
