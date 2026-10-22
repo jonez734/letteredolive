@@ -392,8 +392,16 @@ def shell_login(args: Any) -> Optional[str]:
 
 
 def _show_welcome(args: Any, moniker: str) -> None:
-    """Show the welcome line for a password login. Balance lookup failure is not fatal."""
-    info = member.getbalance_info(args, moniker)
+    """Show the welcome line for a password login.
+
+    The welcome is informational. A failed balance lookup is reported and skipped, so the
+    login itself is never affected.
+    """
+    try:
+        info = member.getbalance_info(args, moniker)
+    except Exception as e:
+        io.echo(f"welcome: balance unavailable ({e.__class__.__name__}); login is unaffected", level="warning")
+        return
     if info is None:
         return
     _welcome(moniker, _last_login_for(moniker), info)

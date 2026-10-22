@@ -77,3 +77,15 @@ def test_refused_password_prints_no_welcome():
          patch.object(lib, "_welcome") as welcome:
         assert lib.shell_login(args) is None
     welcome.assert_not_called()
+
+
+@pytest.mark.unit
+def test_welcome_failure_does_not_stop_the_login():
+    """A balance lookup error must not stop a successful login (the welcome is cosmetic)."""
+    args = _args()
+    with patch.object(lib, "probe_bed", return_value=True), \
+         patch.object(lib, "prompt_credentials", return_value=("jam", "pw")), \
+         patch.object(lib, "_password_login", return_value="jam"), \
+         patch.object(lib.member, "getbalance_info", side_effect=RuntimeError("pool timeout")), \
+         patch.object(lib.io, "echo"):
+        assert lib.shell_login(args) == "jam"
