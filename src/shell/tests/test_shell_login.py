@@ -51,7 +51,7 @@ def _refused():
 @pytest.mark.unit
 def test_bed_unreachable_exits_1_without_prompting(args, capsys):
     with patch.object(lib, "probe_bed", return_value=False), \
-         patch.object(lib, "getpass") as gp:
+         patch.object(lib, "prompt_credentials") as gp:
         assert lib.shell_login(args) is None
     gp.assert_not_called()
     assert lib.LOGIN_EXIT_CODE == 1
@@ -66,7 +66,7 @@ def test_valid_token_logs_in_without_password(args, tmp_path):
     args.token_file = str(tok)
     with patch.object(lib, "probe_bed", return_value=True), \
          patch.object(lib, "reconnect", return_value=_reply()), \
-         patch.object(lib, "getpass") as gp:
+         patch.object(lib, "prompt_credentials") as gp:
         assert lib.shell_login(args) == "alice"
     gp.assert_not_called()
 

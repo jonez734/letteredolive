@@ -1,5 +1,4 @@
 import asyncio
-import getpass
 import os
 import sys
 import types
@@ -220,10 +219,10 @@ def prompt_credentials() -> tuple:
     """
     moniker = ""
     while not moniker:
-        moniker = input("moniker: ").strip()
+        moniker = io.inputstring("moniker: ", "").strip()
     password = ""
     while not password:
-        password = getpass.getpass("password: ")
+        password = util.inputpassword("password: ")
     return moniker, password
 
 
