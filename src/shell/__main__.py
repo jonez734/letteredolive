@@ -25,7 +25,7 @@ def buildargs(args: Any, **kw: Any) -> Any:
 
 
 def main() -> None:
-    parser = buildargs()
+    parser = buildargs(None)
     args = parser.parse_args()
 
     try:
