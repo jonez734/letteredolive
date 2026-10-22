@@ -1,9 +1,14 @@
 import argparse
+import os
 from typing import Any
 
 from bbsengine6 import io, database
 
 from . import lib
+
+#: The database the shell connects to when neither --databasename nor BBSENGINE6_DBNAME
+#: is given. Without it, bbsengine6 falls back to the NEEDINFO sentinel.
+SHELL_DATABASE_DEFAULT = "zoid6"
 
 
 def init(args: Any, **kwargs: Any) -> bool:
@@ -21,7 +26,9 @@ def buildargs(args: Any, **kw: Any) -> argparse.ArgumentParser | None:
     parser.add_argument("--bed-host", default="127.0.0.1", help="bed daemon host")
     parser.add_argument("--bed-port", type=int, default=8765, help="bed daemon port")
     parser.add_argument("--token-file", default=None, help="bed token file (default: XDG_RUNTIME_DIR)")
-    database.buildargs(parser)
+    # An explicit BBSENGINE6_DBNAME wins over the shell default, as it does for bbsengine6.
+    database_default = os.environ.get("BBSENGINE6_DBNAME") or SHELL_DATABASE_DEFAULT
+    database.buildargs(parser, defaults={"databasename": database_default})
     return parser
 
 
