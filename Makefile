@@ -1,6 +1,10 @@
 PROJECT = letteredolive
 OUTDIR = $(CURDIR)/dist/
-VERSION = 0.0.0.dev$(shell date +%Y%m%d%H%M)
+# Build version: 0.0.0.dev<YYYYMMDDHHMMSS>, unique per build (shared script in the meta-repo).
+# Override WHEELS_DIR when building outside the meta-repo.
+WHEELS_DIR ?= $(CURDIR)/../dist-wheels
+VERSION_SCRIPT ?= $(CURDIR)/../scripts/next_version.sh
+VERSION ?= $(shell $(VERSION_SCRIPT) 0.0.0.dev $(WHEELS_DIR))
 MEDIA = /run/media/jam/BEA6-BBCE/work/$(PROJECT)/
 PYTHON = $(HOME)/.venv/bin/python
 
