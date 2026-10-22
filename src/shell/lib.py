@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import sys
 import types
@@ -333,7 +334,20 @@ def _password_login(args: Any, moniker: str, password: str) -> Optional[str]:
         return None
     persist_token(reply, args)
     _LAST_LOGIN["value"] = reply.get("last_login")
+    _BED_NAME["value"] = reply.get("bed_name") or None
     return reply.get("moniker") or moniker
+
+
+_BED_NAME: dict = {"value": None}
+
+
+def shell_logger() -> logging.Logger:
+    """The shell's logger: named for the bed it is connected to, or "shell" before login.
+
+    After login, the shell's warnings and errors carry the same name as the daemon's
+    journal lines, so the two can be read together.
+    """
+    return logging.getLogger(_BED_NAME["value"] or "shell")
 
 
 _LAST_LOGIN: dict = {"value": None}
@@ -349,12 +363,12 @@ def _welcome(moniker: str, last_login, info: dict) -> None:
 
     Never includes the password or the token.
     """
-    if info["source"] == "credits":
-        balance_text = f"credits: {info['balance']}"
-    else:
-        balance_text = f"bank balance: {info['balance']}"
     when = last_login if last_login else "never (first login)"
-    io.echo(f"welcome back {moniker}! last login: {when}, {balance_text}", level="ok")
+    io.echo(
+        f"welcome back {moniker}! last login: {when}, "
+        f"balance: {info['balance']} (source: {info['source']})",
+        level="ok",
+    )
 
 
 def shell_login(args: Any) -> Optional[str]:

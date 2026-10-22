@@ -28,17 +28,18 @@ def _args():
 
 @pytest.mark.unit
 def test_welcome_line_has_moniker_last_login_and_bank_balance():
-    out = _echoed(lib._welcome, "jam", "2026-10-22T14:52:26+00:00", {"balance": 100, "source": "bed"})
+    out = _echoed(lib._welcome, "jam", "2026-10-22T14:52:26+00:00", {"balance": 100, "source": "zoid6 bank"})
     assert "welcome back jam!" in out
     assert "last login: 2026-10-22T14:52:26+00:00" in out
-    assert "bank balance: 100" in out
+    assert "balance: 100" in out
+    assert "source: zoid6 bank" in out
 
 
 @pytest.mark.unit
 def test_welcome_line_labels_credits_when_that_is_the_source():
     out = _echoed(lib._welcome, "alice", None, {"balance": 40, "source": "credits"})
-    assert "credits: 40" in out
-    assert "bank balance" not in out
+    assert "balance: 40" in out
+    assert "source: credits" in out
 
 
 @pytest.mark.unit
