@@ -39,8 +39,7 @@ def test_balance_lookup_from_the_shell_sends_the_token(tmp_path):
     tok.write_text("tok-abc")
     tok.chmod(0o600)
     args = argparse.Namespace(token_file=str(tok), token=None, debug=False)
-    from bbsengine6.member import lib as member_lib
     from bed.tools import _token
     with patch.object(_token, "read_token_file", return_value="tok-abc") as rt:
-        assert member_lib._resolve_bed_token(args) == "tok-abc"
+        assert lib._read_token(args) == "tok-abc"
     rt.assert_called_once()

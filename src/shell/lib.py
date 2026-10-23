@@ -47,6 +47,24 @@ def init_screen(args: Any = None) -> None:
     io.echo("{restorecursor}", flush=True, end="")
 
 
+def _bed_fetch(args: Any, moniker: str) -> dict:
+    """bed's bank reply for ``moniker``: ``{"balance", "account", "bed_name"}``.
+
+    The shell's bed step for bbsengine6's balance lookup. It resolves the token, makes one
+    bank_balance call on a bed connection, and releases the socket on the same loop, even when bed
+    refuses. Raises on bed unavailable, so the caller can report the reason.
+    """
+    from bed.client.bank import BedBankClient
+
+    token = _read_token(args)
+
+    async def _run() -> dict:
+        async with get_bed_connection(args) as conn:
+            return await BedBankClient(conn).get_balance_result(moniker, token=token)
+
+    return asyncio.run(_run())
+
+
 def setbottombar(args, left="", stack=False):
     def right(**kwargs):
         # bottombar.render calls each fragment with keyword arguments (args, player,
@@ -55,7 +73,7 @@ def setbottombar(args, left="", stack=False):
         moniker = member.getcurrentmoniker(render_args)
         if moniker is None:
             return ""
-        balance = member.getbalance(render_args, moniker, pool=kwargs.get("pool"))
+        balance = member.getbalance(render_args, moniker, pool=kwargs.get("pool"), bed_fetch=_bed_fetch)
         if balance is None:
             return ""
         rightbuf = "| %s | %d %s" % (
@@ -439,7 +457,7 @@ def _show_welcome(args: Any, moniker: str) -> None:
     login itself is never affected.
     """
     try:
-        info = member.getbalance_info(args, moniker)
+        info = member.getbalance_info(args, moniker, bed_fetch=_bed_fetch)
     except Exception as e:
         io.echo(f"welcome: balance unavailable ({e.__class__.__name__}); login is unaffected", level="warning")
         return
