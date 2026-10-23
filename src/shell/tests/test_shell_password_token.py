@@ -104,10 +104,19 @@ def test_token_and_password_not_printed(args, capsys):
 def test_login_connection_is_closed(args):
     svc = MagicMock()
     svc.login = AsyncMock(return_value=_ok_reply())
-    conn = MagicMock()
-    ws = MagicMock()
-    ws.close = AsyncMock()
-    conn._ws = ws
+    closes = []
+
+    class _Conn:
+        def __init__(self):
+            self._ws = object()
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *exc):
+            closes.append(self._ws)
+            self._ws = None
+            return False
+
+    conn = _Conn()
     with patch.object(lib, "probe_bed", return_value=True), \
          patch.object(lib, "_show_welcome"), \
          patch.object(lib, "prompt_credentials", return_value=("alice", "pw")), \
@@ -115,5 +124,5 @@ def test_login_connection_is_closed(args):
          patch.object(lib, "persist_token", return_value=True), \
          patch.object(lib, "open_login_connection", return_value=conn):
         lib.shell_login(args)
-    ws.close.assert_awaited_once()
+    assert len(closes) == 1, "the login connection must be closed exactly once"
     assert conn._ws is None

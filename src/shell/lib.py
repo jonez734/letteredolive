@@ -14,7 +14,7 @@ from bed.client.authservice import BedAuthServiceClient
 from bed.client import get_bed_connection
 from bed.tools import _token
 from bed.tools._token import token_path_for
-from bed.client.connection import BedConnection
+from bed.client.connection import BedConnection, run_with_connection
 
 
 PACKAGENAME = "shell"
@@ -223,9 +223,9 @@ def default_token_file() -> str:
 
 
 def reconnect(args: Any, token: str) -> dict:
-    """Ask bed to validate ``token``. Returns bed's reply dict."""
+    """Ask bed to validate ``token``. Returns bed's reply dict. The socket is closed on return."""
     svc = BedAuthServiceClient(get_bed_connection(args))
-    return asyncio.run(svc.reconnect(token))
+    return run_with_connection(svc._conn, lambda: svc.reconnect(token))
 
 
 def prompt_credentials() -> tuple:
@@ -331,23 +331,8 @@ def _password_login(args: Any, moniker: str, password: str) -> Optional[str]:
     Closing after asyncio.run has ended that loop fails with "attached to a different loop".
     """
     conn = open_login_connection(args)
-
-    async def _login_and_close() -> dict:
-        try:
-            return await password_login_client(conn).login(moniker, password)
-        finally:
-            # Await the websocket close on this loop. bed's force_close would
-            # schedule the close on another loop and fail with "attached to a
-            # different loop".
-            ws = getattr(conn, "_ws", None)
-            conn._ws = None
-            if ws is not None:
-                try:
-                    await ws.close()
-                except Exception:
-                    pass
-
-    reply = asyncio.run(_login_and_close())
+    # run_with_connection closes the socket on the loop that opened it, even when the login fails.
+    reply = run_with_connection(conn, lambda: password_login_client(conn).login(moniker, password))
     if not reply.get("ok"):
         io.echo("login refused", level="error")
         return None
@@ -560,15 +545,21 @@ def run_message(args: Any, argv: List[str]) -> bool:
         io.echo(f"message not sent: {err}", level="error")
         return False
     client = _message_client(args)
-    reply = asyncio.run(
-        client.send_message(
-            recipients=parsed["recipients"],
-            content=parsed["body"],
-            channel="member:direct",
-            urgency=parsed["urgency"],
-            sender=sender,
+    try:
+        reply = run_with_connection(
+            client._conn,
+            lambda: client.send_message(
+                recipients=parsed["recipients"],
+                content=parsed["body"],
+                channel="member:direct",
+                urgency=parsed["urgency"],
+                sender=sender,
+            ),
         )
-    )
+    except (ConnectionError, OSError, TimeoutError) as e:
+        # A dropped connection is one error line; the socket was already closed by the helper.
+        io.echo(f"message not sent: bed_unavailable: {e}", level="error")
+        return False
     if not reply.get("ok"):
         io.echo(
             f"message not sent: {reply.get('code') or 'unknown'}: {reply.get('message') or ''}".rstrip(": "),

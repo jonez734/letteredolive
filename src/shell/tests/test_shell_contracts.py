@@ -35,9 +35,14 @@ def test_password_login_closes_connection_on_the_loop_that_used_it():
     async def record_ws_close():
         loops["close"] = asyncio.get_running_loop()
 
-    conn = MagicMock()
-    conn._ws = MagicMock()
-    conn._ws.close = record_ws_close
+    class _Conn:
+        _ws = None
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *exc):
+            await record_ws_close()
+            return False
+    conn = _Conn()
     svc = MagicMock()
     svc.login = fake_login
     with patch.object(lib, "open_login_connection", return_value=conn), \
@@ -59,8 +64,8 @@ def test_login_connection_is_closed_with_await_not_force_close():
     tree = ast.parse(inspect.getsource(lib._password_login))
     calls = [ast.unparse(n.func) for n in ast.walk(tree) if isinstance(n, ast.Call)]
     assert not any("force_close" in c for c in calls)
-    assert any(c.endswith(".close") for c in calls)
-    assert any(isinstance(n, ast.Await) and "close" in ast.unparse(n) for n in ast.walk(tree))
+    # The close is owned by run_with_connection, which awaits it on the login's own loop.
+    assert any(c.endswith("run_with_connection") for c in calls)
 
 
 @pytest.mark.unit
