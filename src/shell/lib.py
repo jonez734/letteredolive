@@ -556,11 +556,62 @@ def _message_client(args: Any) -> Any:
     )
 
 
+MESSAGE_SUBCOMMANDS = ("send", "list", "show")
+
+
+def run_message_list(args: Any) -> bool:
+    """``message list``: the signed-in member's pending messages, one line each. Sends nothing."""
+    client = _message_client(args)
+    moniker = current_session_moniker()
+    reply = run_with_connection(client._conn, lambda: client.list_pending(moniker))
+    if not reply.get("ok"):
+        io.echo(f"list failed: {reply.get('code') or 'unknown'}: {reply.get('message') or ''}".rstrip(": "), level="error")
+        return False
+    messages = reply.get("messages") or []
+    if not messages:
+        io.echo("no pending messages")
+        return True
+    for m in messages:
+        io.echo(f"#{m.get('id')}  from {m.get('sender_moniker')}  {m.get('urgency')}  {m.get('content')}")
+    return True
+
+
+def run_message_show(args: Any, argv: List[str]) -> bool:
+    """``message show <id>``: one message from the pending list. Sends nothing."""
+    if len(argv) < 3 or not argv[2].strip().isdigit():
+        io.echo("usage: message show <id>", level="error")
+        return False
+    wanted = int(argv[2])
+    client = _message_client(args)
+    moniker = current_session_moniker()
+    reply = run_with_connection(client._conn, lambda: client.list_pending(moniker))
+    if not reply.get("ok"):
+        io.echo(f"show failed: {reply.get('code') or 'unknown'}: {reply.get('message') or ''}".rstrip(": "), level="error")
+        return False
+    for m in reply.get("messages") or []:
+        if int(m.get("id", -1)) == wanted:
+            io.echo(f"#{m.get('id')}  from {m.get('sender_moniker')}  {m.get('urgency')}")
+            io.echo(str(m.get("content") or ""))
+            return True
+    io.echo(f"no pending message #{wanted}", level="error")
+    return False
+
+
 def run_message(args: Any, argv: List[str]) -> bool:
-    """The ``message`` command: send a message as the signed-in member through the bed daemon."""
+    """The ``message`` command: send, list, or show. Bare ``--to ...`` sends, as before."""
     if any(a in ("--help", "-h") for a in argv[1:]):
         io.echo(message_help())
         return True
+    sub = argv[1] if len(argv) > 1 else ""
+    if sub == "list":
+        return run_message_list(args)
+    if sub == "show":
+        return run_message_show(args, argv)
+    if sub and not sub.startswith("-") and sub not in MESSAGE_SUBCOMMANDS:
+        io.echo(f"unknown message subcommand '{sub}' (use send, list, or show)", level="error")
+        return False
+    if sub == "send":
+        argv = [argv[0]] + argv[2:]
     try:
         parsed = parse_message_args(argv)
     except ValueError as e:
