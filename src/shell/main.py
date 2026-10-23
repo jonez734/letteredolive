@@ -46,7 +46,7 @@ def main(args: Any, **kwargs: Any) -> bool | None:
         #    if args.debug is True:
         #      ttyio.echo("bbs.main.200: areastack=%r" % (bbsengine.areastack), level="debug")
 
-        preinputhook = f"{{f6}}{{var:promptcolor}}{util.datestamp(format='%c')}"
+        preinputhook = f"{{f6}}{{var:promptcolor}}{util.datestamp()}"
         prompt = "{var:promptcolor}ProtoVision: {var:inputcolor}"
 
         buf = io.inputstring(
