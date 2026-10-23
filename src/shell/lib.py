@@ -384,6 +384,10 @@ def _last_login_for(moniker: str):
     return _LAST_LOGIN.get("value")
 
 
+#: The last-login display format: the same as bbsengine6.util.datestamp's default.
+LAST_LOGIN_FORMAT = "%Y-%m-%d %I:%M%P %Z (%a)"
+
+
 def _format_last_login(last_login) -> str:
     """The last login as a local datestamp, via bbsengine6.util.datestamp().
 
@@ -399,7 +403,7 @@ def _format_last_login(last_login) -> str:
         instant = datetime.fromisoformat(str(last_login))
     except ValueError:
         return str(last_login)
-    return util.datestamp(instant.astimezone(tzlocal()))
+    return util.datestamp(instant.astimezone(tzlocal()), format=LAST_LOGIN_FORMAT)
 
 
 def _welcome(moniker: str, last_login, info: dict) -> None:
