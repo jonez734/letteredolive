@@ -26,6 +26,17 @@ def buildargs(args: Any, **kw: Any) -> argparse.ArgumentParser | None:
     parser.add_argument("--bed-host", default="127.0.0.1", help="bed daemon host")
     parser.add_argument("--bed-port", type=int, default=8765, help="bed daemon port")
     parser.add_argument("--token-file", default=None, help="bed token file (default: XDG_RUNTIME_DIR)")
+    parser.add_argument(
+        "--account",
+        default=None,
+        help="login account: uses bed-<NAME>.token so terminals can hold different logins",
+    )
+    parser.add_argument(
+        "--login",
+        action="store_true",
+        default=False,
+        help="prompt for moniker and password even if a stored token is valid; saves the new token",
+    )
     # An explicit BBSENGINE6_DBNAME wins over the shell default, as it does for bbsengine6.
     database_default = os.environ.get("BBSENGINE6_DBNAME") or SHELL_DATABASE_DEFAULT
     database.buildargs(parser, defaults={"databasename": database_default})

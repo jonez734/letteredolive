@@ -13,6 +13,7 @@ from bed.client.probe import probe_bed
 from bed.client.authservice import BedAuthServiceClient
 from bed.client import get_bed_connection
 from bed.tools import _token
+from bed.tools._token import token_path_for
 from bed.client.connection import BedConnection
 
 
@@ -212,16 +213,13 @@ def resolve_token_file(args: Any) -> str:
     sends the same token the login wrote.
     """
     if not getattr(args, "token_file", None):
-        args.token_file = default_token_file()
+        args.token_file = token_path_for(account=getattr(args, "account", None))
     return args.token_file
 
 
 def default_token_file() -> str:
-    """Token path: $XDG_RUNTIME_DIR/bed.token, else /tmp/bed-<uid>/bed.token."""
-    runtime = os.environ.get("XDG_RUNTIME_DIR", "").strip()
-    if runtime and os.path.isdir(runtime) and os.access(runtime, os.W_OK):
-        return os.path.join(runtime, "bed.token")
-    return f"/tmp/bed-{os.getuid()}/bed.token"
+    """The default token path, the same one bed's tools use (see bed.tools._token)."""
+    return _token.token_path_for()
 
 
 def reconnect(args: Any, token: str) -> dict:
@@ -400,12 +398,13 @@ def shell_login(args: Any) -> Optional[str]:
         return None
 
     token_path = getattr(args, "token_file", None) or default_token_file()
-    try:
-        moniker = _try_token(args, token_path)
-    except _BedDown:
-        return None
-    if moniker is not None:
-        return _set_session(moniker, args)
+    if getattr(args, "login", False) is not True:
+        try:
+            moniker = _try_token(args, token_path)
+        except _BedDown:
+            return None
+        if moniker is not None:
+            return _set_session(moniker, args)
 
     while True:
         try:
