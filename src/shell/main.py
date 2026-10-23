@@ -1,5 +1,6 @@
 import argparse
-from typing import Any
+import shlex
+from typing import Any, Optional, List
 
 from bbsengine6 import io, util, module
 
@@ -8,6 +9,18 @@ from . import lib
 
 def access(args: Any, op: str, **kwargs: Any) -> bool:
     return True
+
+
+def split_input(buf: str) -> Optional[List[str]]:
+    """Split a typed line into arguments with shell-style quoting.
+
+    ``--body "x test"`` gives one argument, ``x test``. Returns None for an unmatched quote,
+    so the caller can report it and redraw the prompt.
+    """
+    try:
+        return shlex.split(buf)
+    except ValueError:
+        return None
 
 
 def init(args: Any, **kwargs: Any) -> bool:
@@ -63,7 +76,12 @@ def main(args: Any, **kwargs: Any) -> bool | None:
         if args.debug is True:
             io.echo(f"shell.100: {buf=}", level="debug")
 
-        argv = buf.split(" ")
+        argv = split_input(buf)
+        if argv is None:
+            io.echo("unmatched quote in command", level="error")
+            continue
+        if not argv:
+            continue
         decision = lib.dispatch_message(argv[0])
         if decision == "unknown":
             io.echo(f"unknown command '{argv[0]}'", level="error")
