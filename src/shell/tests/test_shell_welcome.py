@@ -30,7 +30,8 @@ def _args():
 def test_welcome_line_has_moniker_last_login_and_bank_balance():
     out = _echoed(lib._welcome, "jam", "2026-10-22T14:52:26+00:00", {"balance": 100, "source": "zoid6 bank"})
     assert "welcome back jam!" in out
-    assert "last login: 2026-10-22T14:52:26+00:00" in out
+    assert "last login: 2026-10-22T14:52:26+00:00" not in out
+    assert "last login: " in out
     assert "balance: 100" in out
     assert "source: zoid6 bank" in out
 

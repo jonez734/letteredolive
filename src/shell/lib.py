@@ -373,12 +373,30 @@ def _last_login_for(moniker: str):
     return _LAST_LOGIN.get("value")
 
 
+def _format_last_login(last_login) -> str:
+    """The last login as a local datestamp, via bbsengine6.util.datestamp().
+
+    bed sends an ISO-8601 string with an offset. It is converted to local time so the zone
+    name is shown. A value that cannot be parsed is shown as it was received, so the welcome
+    line never fails.
+    """
+    from datetime import datetime
+
+    from dateutil.tz import tzlocal
+
+    try:
+        instant = datetime.fromisoformat(str(last_login))
+    except ValueError:
+        return str(last_login)
+    return util.datestamp(instant.astimezone(tzlocal()))
+
+
 def _welcome(moniker: str, last_login, info: dict) -> None:
     """Print the welcome line: moniker, last login, and the balance with its source.
 
     Never includes the password or the token.
     """
-    when = last_login if last_login else "never (first login)"
+    when = _format_last_login(last_login) if last_login else "never (first login)"
     io.echo(
         f"welcome back {moniker}! last login: {when}, "
         f"balance: {info['balance']} (source: {info['source']})",
