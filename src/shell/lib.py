@@ -242,15 +242,18 @@ def prompt_credentials() -> tuple:
     return moniker, password
 
 
-def _set_session(moniker: str, args: Any = None, is_sysop: bool = False) -> str:
-    """Record the logged-in moniker and whether it is a sysop.
+def _set_session(moniker: str, args: Any = None, is_sysop: Optional[bool] = None) -> str:
+    """Record the logged-in moniker and, when given, whether it is a sysop.
 
     The member is looked up by moniker (member.getcurrentmoniker and getbalance),
     so no member id is kept here. The sysop flag comes from bed's login or reconnect reply
-    and decides whether ``message`` prompts for a sender.
+    and decides whether ``message`` prompts for a sender. When ``is_sysop`` is not passed,
+    the flag already recorded for this login is kept, so the token path does not reset a
+    sysop to a member.
     """
     _threadlocal.moniker = moniker
-    _threadlocal.is_sysop = bool(is_sysop)
+    if is_sysop is not None:
+        _threadlocal.is_sysop = bool(is_sysop)
     return moniker
 
 
