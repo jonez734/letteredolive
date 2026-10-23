@@ -242,13 +242,15 @@ def prompt_credentials() -> tuple:
     return moniker, password
 
 
-def _set_session(moniker: str, args: Any = None) -> str:
-    """Record the logged-in moniker for the session.
+def _set_session(moniker: str, args: Any = None, is_sysop: bool = False) -> str:
+    """Record the logged-in moniker and whether it is a sysop.
 
     The member is looked up by moniker (member.getcurrentmoniker and getbalance),
-    so no member id is kept here.
+    so no member id is kept here. The sysop flag comes from bed's login or reconnect reply
+    and decides whether ``message`` prompts for a sender.
     """
     _threadlocal.moniker = moniker
+    _threadlocal.is_sysop = bool(is_sysop)
     return moniker
 
 
@@ -284,6 +286,8 @@ def _try_token(args: Any, token_path: str) -> Optional[str]:
         _bed_unreachable(args)
         raise _BedDown() from e
     if reply.get("ok") and reply.get("moniker"):
+        # Record the sysop flag now, so the session knows it before _set_session runs.
+        _threadlocal.is_sysop = bool(reply.get("is_sysop", False))
         return reply["moniker"]
     # Rejected token: remove it so it is not retried on every start.
     try:
@@ -350,6 +354,7 @@ def _password_login(args: Any, moniker: str, password: str) -> Optional[str]:
     persist_token(reply, args)
     _LAST_LOGIN["value"] = reply.get("last_login")
     _BED_NAME["value"] = reply.get("bed_name") or None
+    _threadlocal.is_sysop = bool(reply.get("is_sysop", False))
     return reply.get("moniker") or moniker
 
 
@@ -464,11 +469,12 @@ def parse_message_args(argv: List[str]) -> dict:
     recipients: List[str] = []
     body: Optional[str] = None
     urgency = "ROUTINE"
+    sender: Optional[str] = None
     items = list(argv[1:])
     i = 0
     while i < len(items):
         key = items[i]
-        if key in ("--to", "--body", "--urgency"):
+        if key in ("--to", "--body", "--urgency", "--sender"):
             if i + 1 >= len(items):
                 raise ValueError(f"{key} needs a value")
             value = items[i + 1]
@@ -477,6 +483,8 @@ def parse_message_args(argv: List[str]) -> dict:
                 recipients += [r.strip() for r in value.split(",") if r.strip()]
             elif key == "--body":
                 body = value
+            elif key == "--sender":
+                sender = value.strip()
             else:
                 urgency = value.strip().upper()
             continue
@@ -485,7 +493,34 @@ def parse_message_args(argv: List[str]) -> dict:
         raise ValueError('usage: message --to bob[,carol] --body "text" (--to is required)')
     if body is None or not body.strip():
         raise ValueError('usage: message --to bob --body "text" (--body is required)')
-    return {"recipients": recipients, "body": body, "urgency": urgency}
+    return {"recipients": recipients, "body": body, "urgency": urgency, "sender": sender}
+
+
+def current_session_moniker() -> str:
+    """The signed-in member's moniker, as recorded by the session."""
+    return getattr(_threadlocal, "moniker", "") or ""
+
+
+def current_session_is_sysop() -> bool:
+    """True when the signed-in session belongs to a sysop (recorded at login or reconnect)."""
+    return getattr(_threadlocal, "is_sysop", False) is True
+
+
+def resolve_sender(parsed_sender: Optional[str], session_moniker: str, is_sysop: bool, prompt=None):
+    """Return ``(sender, error)`` for a message command.
+
+    A member's sender is their own moniker: a different ``--sender`` is refused. A sysop is
+    prompted with their own moniker as the default; an empty answer keeps it. ``prompt`` is
+    called with the default and returns the answer (``io.inputstring`` in the shell).
+    """
+    if not is_sysop:
+        if parsed_sender and parsed_sender.lower() != session_moniker.lower():
+            return None, "you may only send as yourself"
+        return session_moniker, None
+    if prompt is None:
+        return parsed_sender or session_moniker, None
+    answer = (prompt(session_moniker) or "").strip()
+    return (answer or session_moniker), None
 
 
 def _read_token(args: Any) -> str:
@@ -512,6 +547,15 @@ def run_message(args: Any, argv: List[str]) -> bool:
     except ValueError as e:
         io.echo(str(e), level="error")
         return False
+    sender, err = resolve_sender(
+        parsed["sender"],
+        current_session_moniker(),
+        current_session_is_sysop(),
+        prompt=lambda default: io.inputstring("sender: ", default),
+    )
+    if err is not None:
+        io.echo(f"message not sent: {err}", level="error")
+        return False
     client = _message_client(args)
     reply = asyncio.run(
         client.send_message(
@@ -519,6 +563,7 @@ def run_message(args: Any, argv: List[str]) -> bool:
             content=parsed["body"],
             channel="member:direct",
             urgency=parsed["urgency"],
+            sender=sender,
         )
     )
     if not reply.get("ok"):
