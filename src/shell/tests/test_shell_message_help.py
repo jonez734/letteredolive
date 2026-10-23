@@ -21,8 +21,9 @@ def test_help_prints_usage_and_returns_true(flag):
         assert lib.run_message(_args(), ["message", flag]) is True
     client.send_message.assert_not_called()
     text = " ".join(str(c.args[0]) for c in echo.call_args_list if c.args)
-    assert "usage: message --to" in text
-    assert "--body" in text
+    assert "usage: message" in text
+    for flag in ("--to", "--body", "--urgency", "--sender"):
+        assert flag in text
 
 
 @pytest.mark.unit

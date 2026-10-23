@@ -74,13 +74,13 @@ def test_missing_body_is_refused():
 
 @pytest.mark.unit
 def test_unknown_flag_is_refused():
-    with pytest.raises(ValueError, match="unknown argument"):
+    with pytest.raises(ValueError, match="unrecognized arguments"):
         _parse('message --to bob --body "x" --bogus 1')
 
 
 @pytest.mark.unit
 def test_flag_without_a_value_is_refused():
-    with pytest.raises(ValueError, match="needs a value"):
+    with pytest.raises(ValueError, match="expected one argument"):
         _parse('message --to bob --body')
 
 

@@ -448,40 +448,50 @@ def _show_welcome(args: Any, moniker: str) -> None:
     _welcome(moniker, _last_login_for(moniker), info)
 
 
-def parse_message_args(argv: List[str]) -> dict:
-    """Parse ``message --to bob[,carol] [--to dana] --body "text" [--urgency ROUTINE]``.
+class _MessageArgError(ValueError):
+    """Raised by the message parser; argparse's own messages are passed through."""
 
-    ``argv`` includes the command name as its first item, which is skipped. Raises ValueError
-    with a usage message when ``--to`` or ``--body`` is missing.
+
+def _message_parser():
+    from shell import message as message_args
+
+    parser = message_args.buildargs(None)
+
+    def _error(msg: str) -> None:
+        raise _MessageArgError(msg)
+
+    parser.error = _error  # argparse calls error() on a bad argument; keep it a ValueError
+    return parser
+
+
+def parse_message_args(argv: List[str]) -> dict:
+    """Parse ``message --to bob[,carol] --body "text" [--urgency ROUTINE] [--sender NAME]``.
+
+    ``argv`` includes the command name as its first item, which is skipped. The parser is the one
+    built by ``shell.message.buildargs``, so the accepted flags and the help text match. Raises
+    ValueError when a required field is missing or a flag is wrong.
     """
-    recipients: List[str] = []
-    body: Optional[str] = None
-    urgency = "ROUTINE"
-    sender: Optional[str] = None
-    items = list(argv[1:])
-    i = 0
-    while i < len(items):
-        key = items[i]
-        if key in ("--to", "--body", "--urgency", "--sender"):
-            if i + 1 >= len(items):
-                raise ValueError(f"{key} needs a value")
-            value = items[i + 1]
-            i += 2
-            if key == "--to":
-                recipients += [r.strip() for r in value.split(",") if r.strip()]
-            elif key == "--body":
-                body = value
-            elif key == "--sender":
-                sender = value.strip()
-            else:
-                urgency = value.strip().upper()
-            continue
-        raise ValueError(f"unknown argument {key!r}")
+    parser = _message_parser()
+    try:
+        ns = parser.parse_args(list(argv[1:]))
+    except (_MessageArgError, SystemExit) as e:
+        raise ValueError(str(e) if isinstance(e, _MessageArgError) else "invalid message arguments") from e
+    recipients = [r.strip() for value in ns.to for r in value.split(",") if r.strip()]
     if not recipients:
         raise ValueError('usage: message --to bob[,carol] --body "text" (--to is required)')
-    if body is None or not body.strip():
+    if ns.body is None or not ns.body.strip():
         raise ValueError('usage: message --to bob --body "text" (--body is required)')
-    return {"recipients": recipients, "body": body, "urgency": urgency, "sender": sender}
+    return {
+        "recipients": recipients,
+        "body": ns.body,
+        "urgency": ns.urgency,
+        "sender": (ns.sender or "").strip() or None,
+    }
+
+
+def message_help() -> str:
+    """The help text for `message`, from the same parser the command uses."""
+    return _message_parser().format_help()
 
 
 def current_session_moniker() -> str:
@@ -528,19 +538,10 @@ def _message_client(args: Any) -> Any:
     )
 
 
-MESSAGE_USAGE = (
-    'usage: message --to bob[,carol] --body "text" [--urgency ROUTINE] [--sender NAME]\n'
-    "  --to      one or more monikers, comma-separated or repeated\n"
-    "  --body    the message text (quote it if it has spaces)\n"
-    "  --urgency ROUTINE, IMPORTANT, URGENT or CRITICAL (default ROUTINE)\n"
-    "  --sender  a sysop may send as another member; anyone else is refused"
-)
-
-
 def run_message(args: Any, argv: List[str]) -> bool:
     """The ``message`` command: send a message as the signed-in member through the bed daemon."""
     if any(a in ("--help", "-h") for a in argv[1:]):
-        io.echo(MESSAGE_USAGE)
+        io.echo(message_help())
         return True
     try:
         parsed = parse_message_args(argv)
