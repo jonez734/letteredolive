@@ -61,15 +61,13 @@ def test_welcome_still_never_prints_password_or_token():
     assert "token" not in out.lower()
 
 
-LAST_LOGIN_FORMAT = "%Y-%m-%d %I:%M%P %Z (%a)"
-
-
 @pytest.mark.unit
-def test_welcome_passes_the_teos_datestamp_format_explicitly():
+def test_welcome_uses_the_datestamp_default_format():
+    # No format argument: util.datestamp()'s own default is the layout the welcome line shows.
     with patch.object(lib.util, "datestamp", return_value="STAMP") as ds:
         _echoed(lib._welcome, "jam", "2026-10-22T16:38:50+00:00", {"balance": 1, "source": "bed"})
-    assert ds.call_args.kwargs.get("format") == LAST_LOGIN_FORMAT or (
-        len(ds.call_args.args) > 1 and ds.call_args.args[1] == LAST_LOGIN_FORMAT)
+    assert "format" not in ds.call_args.kwargs
+    assert len(ds.call_args.args) == 1
 
 
 @pytest.mark.unit

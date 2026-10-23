@@ -165,7 +165,9 @@ def test_logout_clears_session_moniker():
 def test_logout_command_clears_session_in_main_loop():
     import ast
     from pathlib import Path as _P
-    tree = ast.parse(_P("shell/main.py").read_text())
+    # Resolve the file from the package, not the working directory, so the test runs from anywhere.
+    main_py = _P(__file__).resolve().parents[1] / "main.py"
+    tree = ast.parse(main_py.read_text())
     found = False
     for node in ast.walk(tree):
         if isinstance(node, ast.If) and isinstance(node.test, ast.Compare):
