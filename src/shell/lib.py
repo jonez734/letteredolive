@@ -110,7 +110,7 @@ commands = {
     },
     "message": {
         "handler": "run_message",
-        "help": 'send a message: message --to bob[,carol] --body "text" [--urgency ROUTINE]',
+        "help": 'send a message: message --to bob[,carol] --body "text" [--urgency ROUTINE] (message --help for usage)',
     },
     "logout": {"help": "logout of the system"},
     "exit": {"help": "exit shell"},
@@ -528,8 +528,20 @@ def _message_client(args: Any) -> Any:
     )
 
 
+MESSAGE_USAGE = (
+    'usage: message --to bob[,carol] --body "text" [--urgency ROUTINE] [--sender NAME]\n'
+    "  --to      one or more monikers, comma-separated or repeated\n"
+    "  --body    the message text (quote it if it has spaces)\n"
+    "  --urgency ROUTINE, IMPORTANT, URGENT or CRITICAL (default ROUTINE)\n"
+    "  --sender  a sysop may send as another member; anyone else is refused"
+)
+
+
 def run_message(args: Any, argv: List[str]) -> bool:
     """The ``message`` command: send a message as the signed-in member through the bed daemon."""
+    if any(a in ("--help", "-h") for a in argv[1:]):
+        io.echo(MESSAGE_USAGE)
+        return True
     try:
         parsed = parse_message_args(argv)
     except ValueError as e:
