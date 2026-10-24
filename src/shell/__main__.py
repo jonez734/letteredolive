@@ -3,6 +3,8 @@ import sys
 import os
 from typing import Any
 
+import psycopg
+
 from bbsengine6 import io, database
 
 from . import lib
@@ -10,6 +12,20 @@ from . import lib
 #: The database the shell connects to when neither --databasename nor BBSENGINE6_DBNAME
 #: is given. Without it, bbsengine6 falls back to the NEEDINFO sentinel.
 SHELL_DATABASE_DEFAULT = "zoid6"
+
+#: Exit status when the database refuses the connection (distinct from LOGIN_EXIT_CODE).
+DB_UNAVAILABLE_EXIT_CODE = 2
+
+
+def _check_database(dsn: str) -> None:
+    """Open and close one direct connection. Raises psycopg.Error if the server refuses it.
+
+    The pool retries failed connections in worker threads and logs each attempt, so a refused
+    connection (for example, no PostgreSQL role for the OS user) would flood the terminal.
+    One direct attempt fails once, with one message.
+    """
+    conn = psycopg.connect(dsn, connect_timeout=5)
+    conn.close()
 
 
 def init(args: Any, **kwargs: Any) -> bool:
@@ -63,6 +79,13 @@ def main() -> None:
     # cleanup below (which needs a real terminal).
     if lib.shell_login(args) is None:
         raise SystemExit(lib.LOGIN_EXIT_CODE)
+
+    # One direct connection before the pool exists: a refused connection ends here with one message.
+    try:
+        _check_database(database.make_dsn(args, dbname=args.databasename))
+    except psycopg.Error as e:
+        io.echo(f"letteredolive: database unavailable: {str(e).strip()}", level="error")
+        raise SystemExit(DB_UNAVAILABLE_EXIT_CODE)
 
     try:
         with database.getpool(args) as pool:

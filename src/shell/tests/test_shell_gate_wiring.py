@@ -40,6 +40,7 @@ def test_main_enters_loop_after_successful_login():
          patch.object(entry, "init", return_value=True), \
          patch.object(entry.io, "echo"), \
          patch.object(entry.lib, "shell_login", return_value="alice"), \
+         patch.object(entry, "_check_database"), \
          patch.object(entry.lib, "runmodule") as run:
         b.return_value.parse_args.return_value = args
         gp.return_value.__enter__.return_value = MagicMock()
