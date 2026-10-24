@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "letteredolive"
+# The build sets the version from the environment (VERSION=... make prod); this is the fallback.
+dynamic = ["version"]
+description = "letteredolive: the BBS shell (package shell), run as a login shell or command."
+authors = [{ name = "zoidtechnologies.com", email = "letteredolive@projects.zoidtechnologies.com" }]
+license = "GPL-2.0-only"
+requires-python = ">=3.12,<3.13"
+classifiers = [
+    "Programming Language :: Python :: 3.12",
+    "Environment :: Console",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users",
+    "Operating System :: POSIX",
+    "Topic :: Terminals",
+]
+dependencies = ["bbsengine6", "bed"]
+
+[project.urls]
+Homepage = "https://projects.zoidtechnologies.com/letteredolive/"
+
+[tool.setuptools]
+# The launchers are shell scripts (exec -a "$0" python -m shell), not Python entry points.
+script-files = ["../bin/letteredolive", "../bin/shell", "../bin/bbs"]
+packages = ["shell", "letteredolive"]
+
+[tool.setuptools.dynamic]
+version = { attr = "letteredolive._version.__version__" }
