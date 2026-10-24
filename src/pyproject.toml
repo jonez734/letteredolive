@@ -8,7 +8,7 @@ name = "letteredolive"
 dynamic = ["version"]
 description = "letteredolive: the BBS shell (package shell), run as a login shell or command."
 authors = [{ name = "zoidtechnologies.com", email = "letteredolive@projects.zoidtechnologies.com" }]
-license = "GPL-2.0-only"
+license = "GPL-2.0-or-later"
 requires-python = ">=3.12,<3.13"
 classifiers = [
     "Programming Language :: Python :: 3.12",
