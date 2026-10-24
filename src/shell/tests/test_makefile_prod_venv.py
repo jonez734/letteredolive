@@ -93,3 +93,13 @@ def test_prod_checks_root_before_building():
     root_line = next(i for i, l in enumerate(lines) if "id -u" in l)
     build_line = next(i for i, l in enumerate(lines) if "setup.py" in l)
     assert root_line < build_line, "the root guard must run before any build step"
+
+
+@pytest.mark.unit
+def test_prod_builds_with_python_312_not_the_default_python3():
+    """bbsengine6 requires <3.13, so prod must build with /usr/bin/python3.12 explicitly."""
+    r = subprocess.run(["make", "-n", "-C", str(ROOT), "prod"], capture_output=True, text=True, timeout=60)
+    setup_lines = [l for l in r.stdout.splitlines() if "setup.py" in l]
+    assert setup_lines, "prod must build the wheel"
+    assert all("/usr/bin/python3.12" in l for l in setup_lines), setup_lines
+    assert "/usr/bin/python3 " not in r.stdout

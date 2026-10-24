@@ -9,7 +9,8 @@ MEDIA = /run/media/jam/BEA6-BBCE/work/$(PROJECT)/
 PYTHON = $(HOME)/.venv/bin/python
 # Install prefix for `prod` (the global launchers and their venv). Set with `deploy letteredolive.prod --prefix`.
 PREFIX ?= $(or $(DEPLOY_PREFIX),/var/lib/zoid6/venv)
-SYSPY ?= /usr/bin/python3
+# bbsengine6 requires Python <3.13, so the build and the venv use 3.12, not the default python3 (3.14).
+SYSPY ?= /usr/bin/python3.12
 BIN_DIR ?= /usr/local/bin
 
 .PHONY: all clean build sdist version deploy venv prod
