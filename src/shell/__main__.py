@@ -1,4 +1,5 @@
 import argparse
+import sys
 import os
 from typing import Any
 
@@ -47,6 +48,8 @@ def main() -> None:
     parser = buildargs(None)
     args = parser.parse_args()
     lib.resolve_token_file(args)
+    # A login shell is started with a leading dash on argv[0]; the idle message depends on it.
+    args.login_shell = lib.is_login_shell(sys.argv)
 
     # Anonymous sessions are not allowed: bed must be up, and the user must be
     # authenticated (valid token or password) before the command loop starts.

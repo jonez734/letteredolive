@@ -653,3 +653,26 @@ def run_message(args: Any, argv: List[str]) -> bool:
         level="ok",
     )
     return True
+
+
+def is_login_shell(argv: List[str]) -> bool:
+    """True when the shell was started as a login shell.
+
+    A login shell is started with a leading dash on argv[0] (for example ``-letteredolive``), which is
+    the standard convention. A shell started by typing ``shell`` is not.
+    """
+    if not argv:
+        return False
+    return str(argv[0]).startswith("-")
+
+
+def idle_message(login_shell: bool, minutes: int) -> str:
+    """The one line shown when the session times out for inactivity.
+
+    A login shell never mentions ``shell``: it has no prompt to return to. A shell run from bash
+    names the command that signs in again.
+    """
+    if login_shell:
+        return f"session timed out after {minutes} minutes of inactivity. logged out."
+    return (f"session timed out after {minutes} minutes of inactivity. logged out. "
+            "run shell --login to sign in again.")
