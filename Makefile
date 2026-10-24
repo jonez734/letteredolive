@@ -49,11 +49,14 @@ venv: build
 
 deploy: venv
 
-# prod: root only. Installs into $(PREFIX) and writes the three launchers (letteredolive, shell, bbs)
-# into $(BIN_DIR), each running $(PREFIX)/bin/python. Never creates the venv; never --break-system-packages.
-prod: build
+# prod: root only. Builds a fresh wheel with the system Python (not $(HOME)/.venv, since sudo sets HOME to
+# /root), installs it into $(PREFIX), and writes the three launchers (letteredolive, shell, bbs) into
+# $(BIN_DIR), each running $(PREFIX)/bin/python. Never creates the venv; never --break-system-packages.
+prod:
 	@if [ "$$(id -u)" -ne 0 ]; then echo "prod: run as root (sudo make prod)"; exit 1; fi
 	@if [ ! -x "$(PREFIX)/bin/python" ]; then echo "prod: $(PREFIX)/bin/python is missing. Create it as root first: $(SYSPY) -m venv $(PREFIX)"; exit 1; fi
+	@echo '__version__ = "$(VERSION)"' > src/letteredolive/_version.py
+	cd src && $(SYSPY) ./setup.py -q bdist_wheel --dist-dir $(WHEELS_DIR)
 	$(PREFIX)/bin/python -m pip install --no-index --find-links $(WHEELS_DIR) letteredolive
 	@for name in letteredolive shell bbs; do \
 		printf '#!/bin/sh\n# %s: the BBS shell (package "shell"). Installed by make prod; runs %s.\nexec -a "$$0" %s/bin/python -W all -m shell "$$@"\n' "$$name" "$(PREFIX)" "$(PREFIX)" > "$(BIN_DIR)/$$name"; \

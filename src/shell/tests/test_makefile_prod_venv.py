@@ -66,3 +66,30 @@ def test_prod_writes_launchers_with_the_prefix_interpreter():
     r = _dry("prod")
     assert "/bin/python" in r.stdout
     assert "exec -a" in r.stdout
+
+
+@pytest.mark.unit
+def test_prod_does_not_depend_on_the_user_venv():
+    """Under sudo HOME is /root, so prod must not run $(HOME)/.venv/bin/python (build does)."""
+    r = subprocess.run(["make", "-n", "-C", str(ROOT), "prod", "HOME=/root"],
+                       capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, r.stderr
+    assert "/root/.venv" not in r.stdout
+    assert "/.venv/bin/python" not in r.stdout
+
+
+@pytest.mark.unit
+def test_prod_builds_with_the_system_python():
+    r = subprocess.run(["make", "-n", "-C", str(ROOT), "prod"], capture_output=True, text=True, timeout=60)
+    setup_lines = [l for l in r.stdout.splitlines() if "setup.py" in l]
+    assert setup_lines, "prod must build the wheel"
+    assert all("/usr/bin/python3" in l for l in setup_lines), setup_lines
+
+
+@pytest.mark.unit
+def test_prod_checks_root_before_building():
+    r = subprocess.run(["make", "-n", "-C", str(ROOT), "prod"], capture_output=True, text=True, timeout=60)
+    lines = r.stdout.splitlines()
+    root_line = next(i for i, l in enumerate(lines) if "id -u" in l)
+    build_line = next(i for i, l in enumerate(lines) if "setup.py" in l)
+    assert root_line < build_line, "the root guard must run before any build step"
