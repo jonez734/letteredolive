@@ -79,27 +79,26 @@ def test_prod_does_not_depend_on_the_user_venv():
 
 
 @pytest.mark.unit
-def test_prod_builds_with_the_system_python():
+def test_prod_builds_with_the_standard_frontend_not_setup_py_bdist_wheel():
+    """setup.py bdist_wheel fails on its egg-info to dist-info rename here; prod uses python -m build."""
     r = subprocess.run(["make", "-n", "-C", str(ROOT), "prod"], capture_output=True, text=True, timeout=60)
-    setup_lines = [l for l in r.stdout.splitlines() if "setup.py" in l]
-    assert setup_lines, "prod must build the wheel"
-    assert all("/usr/bin/python3" in l for l in setup_lines), setup_lines
+    build_lines = [l for l in r.stdout.splitlines() if "-m build" in l]
+    assert build_lines, "prod must build with python -m build"
+    assert not [l for l in r.stdout.splitlines() if "bdist_wheel" in l], r.stdout
 
 
 @pytest.mark.unit
-def test_prod_checks_root_before_building():
+def test_prod_builds_with_python_312():
+    """bbsengine6 requires <3.13: the build runs /usr/bin/python3.12 explicitly, not the default python3."""
+    r = subprocess.run(["make", "-n", "-C", str(ROOT), "prod"], capture_output=True, text=True, timeout=60)
+    build_lines = [l for l in r.stdout.splitlines() if "-m build" in l]
+    assert build_lines and all("/usr/bin/python3.12" in l for l in build_lines), build_lines
+
+
+@pytest.mark.unit
+def test_prod_root_guard_runs_before_the_build():
     r = subprocess.run(["make", "-n", "-C", str(ROOT), "prod"], capture_output=True, text=True, timeout=60)
     lines = r.stdout.splitlines()
     root_line = next(i for i, l in enumerate(lines) if "id -u" in l)
-    build_line = next(i for i, l in enumerate(lines) if "setup.py" in l)
-    assert root_line < build_line, "the root guard must run before any build step"
-
-
-@pytest.mark.unit
-def test_prod_builds_with_python_312_not_the_default_python3():
-    """bbsengine6 requires <3.13, so prod must build with /usr/bin/python3.12 explicitly."""
-    r = subprocess.run(["make", "-n", "-C", str(ROOT), "prod"], capture_output=True, text=True, timeout=60)
-    setup_lines = [l for l in r.stdout.splitlines() if "setup.py" in l]
-    assert setup_lines, "prod must build the wheel"
-    assert all("/usr/bin/python3.12" in l for l in setup_lines), setup_lines
-    assert "/usr/bin/python3 " not in r.stdout
+    build_line = next(i for i, l in enumerate(lines) if "-m build" in l)
+    assert root_line < build_line
