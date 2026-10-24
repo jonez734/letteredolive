@@ -21,8 +21,14 @@ def access(args: Any, op: str, **kwargs: Any) -> bool:
     return True
 
 
+def prog_name() -> str:
+    """The command name this process was started as: letteredolive, shell, or bbs."""
+    name = lib.process_argv0().lstrip("-").rsplit("/", 1)[-1]
+    return name or "letteredolive"
+
+
 def buildargs(args: Any, **kw: Any) -> argparse.ArgumentParser | None:
-    parser = __import__("argparse").ArgumentParser("letteredolive")
+    parser = __import__("argparse").ArgumentParser(prog_name())
     parser.add_argument("--debug", default=False)
     parser.add_argument("--bed-host", default="127.0.0.1", help="bed daemon host")
     parser.add_argument("--bed-port", type=int, default=8765, help="bed daemon port")
@@ -49,7 +55,7 @@ def main() -> None:
     args = parser.parse_args()
     lib.resolve_token_file(args)
     # A login shell is started with a leading dash on argv[0]; the idle message depends on it.
-    args.login_shell = lib.is_login_shell(sys.argv)
+    args.login_shell = lib.is_login_shell_process()
 
     # Anonymous sessions are not allowed: bed must be up, and the user must be
     # authenticated (valid token or password) before the command loop starts.

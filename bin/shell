@@ -1,0 +1,7 @@
+#!/bin/sh
+# letteredolive: the BBS shell (package "shell"). Also installed as "shell" and "bbs".
+#
+# exec replaces this process with python, so the shell keeps the argv[0] it was started with. A
+# login shell is started with a leading dash on argv[0] (for example -letteredolive), and the shell
+# uses that to tell a login session from one started by typing the command.
+exec -a "$0" python3 -W all -m shell "$@"

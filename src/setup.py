@@ -18,7 +18,7 @@ setup(
     author="zoidtechnologies.com",
     author_email=f"{projectname}@projects.zoidtechnologies.com",
     license="GPLv2",
-    scripts=["bin/bbs", "bin/shell"],
+    scripts=["bin/letteredolive", "bin/shell", "bin/bbs"],
     requires=["bbsengine6", "bed"],
     install_requires=["bbsengine6", "bed"],
     packages=[packagename, projectname],

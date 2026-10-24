@@ -676,3 +676,24 @@ def idle_message(login_shell: bool, minutes: int) -> str:
         return f"session timed out after {minutes} minutes of inactivity. logged out."
     return (f"session timed out after {minutes} minutes of inactivity. logged out. "
             "run shell --login to sign in again.")
+
+
+def process_argv0() -> str:
+    """The name this process was started with, including a leading dash for a login shell.
+
+    ``python -m`` replaces ``sys.argv[0]`` with the module path, but the kernel keeps the name set by
+    ``exec -a`` in /proc/self/cmdline. Read that first, and fall back to sys.argv[0].
+    """
+    try:
+        with open("/proc/self/cmdline", "rb") as f:
+            first = f.read().split(b"\0", 1)[0]
+        if first:
+            return first.decode(errors="replace")
+    except OSError:
+        pass
+    return sys.argv[0] if sys.argv else ""
+
+
+def is_login_shell_process() -> bool:
+    """True when this process was started as a login shell (its name begins with a dash)."""
+    return process_argv0().startswith("-")
