@@ -102,3 +102,14 @@ def test_prod_root_guard_runs_before_the_build():
     root_line = next(i for i, l in enumerate(lines) if "id -u" in l)
     build_line = next(i for i, l in enumerate(lines) if "-m build" in l)
     assert root_line < build_line
+
+
+@pytest.mark.unit
+def test_prod_installs_the_version_it_just_built():
+    """Unpinned `pip install letteredolive` can pick an older wheel from dist-wheels (date-style
+    filenames such as 202610232249 outrank 0.0.2.devYYYY...). prod must pin the built VERSION."""
+    r = _dry("prod")
+    assert r.returncode == 0, r.stderr
+    install = [line for line in r.stdout.splitlines() if "-m pip install" in line and "--no-index" in line]
+    assert install, r.stdout
+    assert all("letteredolive==" in line for line in install), install
