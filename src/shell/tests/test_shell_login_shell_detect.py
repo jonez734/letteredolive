@@ -29,21 +29,15 @@ def test_no_argv_is_not_a_login_shell():
 
 
 @pytest.mark.unit
-def test_process_argv0_is_read_from_proc_when_available(monkeypatch, tmp_path):
-    # python -m replaces sys.argv[0] with the module path, so the process name (set by exec -a) is
-    # read from /proc/self/cmdline instead.
-    cmdline = tmp_path / "cmdline"
-    cmdline.write_bytes(b"-letteredolive\0--databaseport=5432\0")
-    real_open = open
-
-    def fake_open(path, *a, **k):
-        if str(path) == "/proc/self/cmdline":
-            return real_open(cmdline, *a, **k)
-        return real_open(path, *a, **k)
-
-    monkeypatch.setattr("builtins.open", fake_open)
-    assert lib.process_argv0() == "-letteredolive"
+def test_process_name_comes_from_proc_name_not_proc(monkeypatch):
+    # The launcher passes its own name as --proc-name. The shell reads it from there, so a login
+    # session is detected without relying on /proc/self/cmdline.
+    from shell import lib
+    monkeypatch.setattr(lib, "_PROC_NAME", "-letteredolive")
+    assert lib.process_name() == "-letteredolive"
     assert lib.is_login_shell_process() is True
+    monkeypatch.setattr(lib, "_PROC_NAME", "letteredolive")
+    assert lib.is_login_shell_process() is False
 
 
 @pytest.mark.unit

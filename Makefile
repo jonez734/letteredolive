@@ -60,7 +60,7 @@ prod:
 	cd src && $(SYSPY) -m build --wheel --outdir $(WHEELS_DIR) .
 	$(PREFIX)/bin/python -m pip install --no-index --find-links $(WHEELS_DIR) letteredolive==$(VERSION)
 	@for name in letteredolive shell bbs; do \
-		printf '#!/bin/sh\n# %s: the BBS shell (package "shell"). Installed by make prod; runs %s.\nexec -a "$$0" %s/bin/python -W all -m shell "$$@"\n' "$$name" "$(PREFIX)" "$(PREFIX)" > "$(BIN_DIR)/$$name"; \
+		printf '#!/bin/sh\n# %s: the BBS shell (package "shell"). Installed by make prod; runs %s.\nexec %s/bin/python -W all -m shell --proc-name "$$0" "$$@"\n' "$$name" "$(PREFIX)" "$(PREFIX)" > "$(BIN_DIR)/$$name"; \
 		chmod 755 "$(BIN_DIR)/$$name"; \
 	done
 	@echo "prod: installed into $(PREFIX); launchers in $(BIN_DIR)"

@@ -678,22 +678,57 @@ def idle_message(login_shell: bool, minutes: int) -> str:
             "run shell --login to sign in again.")
 
 
-def process_argv0() -> str:
-    """The name this process was started with, including a leading dash for a login shell.
+#: prctl option that sets the kernel name of the calling thread (what ps shows in its COMM column).
+_PR_SET_NAME = 15
 
-    ``python -m`` replaces ``sys.argv[0]`` with the module path, but the kernel keeps the name set by
-    ``exec -a`` in /proc/self/cmdline. Read that first, and fall back to sys.argv[0].
+#: The kernel keeps 15 bytes of a process name.
+_COMM_LIMIT = 15
+
+#: Set by __main__ from --proc-name before anything reads the login state.
+_PROC_NAME = ""
+
+
+def _load_libc():
+    """The C library, loaded through ctypes. Raises OSError when it cannot be loaded."""
+    import ctypes
+    import ctypes.util
+
+    path = ctypes.util.find_library("c")
+    if not path:
+        raise OSError("libc not found")
+    return ctypes.CDLL(path, use_errno=True)
+
+
+def set_proc_name(name: str) -> None:
+    """Set the kernel process name, so ``ps`` shows it (for example ``-letteredolive``).
+
+    Linux only: prctl(PR_SET_NAME) does not exist elsewhere, so the call is skipped on other
+    platforms. The name is cosmetic, so any failure is logged at debug and startup continues.
     """
+    if not sys.platform.startswith("linux"):
+        return
     try:
-        with open("/proc/self/cmdline", "rb") as f:
-            first = f.read().split(b"\0", 1)[0]
-        if first:
-            return first.decode(errors="replace")
-    except OSError:
-        pass
-    return sys.argv[0] if sys.argv else ""
+        libc = _load_libc()
+        raw = name.encode("utf-8", errors="replace")[:_COMM_LIMIT]
+        libc.prctl(_PR_SET_NAME, raw, 0, 0, 0)
+    except OSError as e:
+        io.echo(f"shell.lib.set_proc_name: could not set process name: {e}", level="debug")
+
+
+def process_name() -> str:
+    """The name this process was started with, as the launcher passed it in (--proc-name).
+
+    The launcher runs the venv's python directly, so sys.argv[0] is the venv path, not the command
+    name. The command name comes through --proc-name, and a login shell's keeps its leading dash.
+    """
+    return _PROC_NAME or (sys.argv[0] if sys.argv else "")
+
+
+def process_argv0() -> str:
+    """Compatibility name for process_name()."""
+    return process_name()
 
 
 def is_login_shell_process() -> bool:
     """True when this process was started as a login shell (its name begins with a dash)."""
-    return process_argv0().startswith("-")
+    return process_name().startswith("-")

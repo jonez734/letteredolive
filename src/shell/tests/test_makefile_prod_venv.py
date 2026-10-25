@@ -65,7 +65,8 @@ def test_venv_keeps_installing_to_home():
 def test_prod_writes_launchers_with_the_prefix_interpreter():
     r = _dry("prod")
     assert "/bin/python" in r.stdout
-    assert "exec -a" in r.stdout
+    assert "--proc-name" in r.stdout
+    assert "exec -a" not in r.stdout
 
 
 @pytest.mark.unit

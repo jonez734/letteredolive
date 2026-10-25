@@ -46,6 +46,11 @@ def prog_name() -> str:
 def buildargs(args: Any, **kw: Any) -> argparse.ArgumentParser | None:
     parser = __import__("argparse").ArgumentParser(prog_name())
     parser.add_argument("--debug", default=False)
+    parser.add_argument(
+        "--proc-name",
+        default="",
+        help="the name the launcher was started as (for example -letteredolive for a login shell)",
+    )
     parser.add_argument("--bed-host", default="127.0.0.1", help="bed daemon host")
     parser.add_argument("--bed-port", type=int, default=8765, help="bed daemon port")
     parser.add_argument("--token-file", default=None, help="bed token file (default: XDG_RUNTIME_DIR)")
@@ -69,6 +74,11 @@ def buildargs(args: Any, **kw: Any) -> argparse.ArgumentParser | None:
 def main() -> None:
     parser = buildargs(None)
     args = parser.parse_args()
+    # The launcher passes its own name; it sets the process name ps shows and the login state.
+    proc_name = args.proc_name if isinstance(args.proc_name, str) else ""
+    if proc_name:
+        lib._PROC_NAME = proc_name
+    lib.set_proc_name(lib.process_name() or prog_name())
     lib.resolve_token_file(args)
     # A login shell is started with a leading dash on argv[0]; the idle message depends on it.
     args.login_shell = lib.is_login_shell_process()

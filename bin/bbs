@@ -1,7 +1,8 @@
 #!/bin/sh
 # letteredolive: the BBS shell (package "shell"). Also installed as "shell" and "bbs".
 #
-# exec replaces this process with python, so the shell keeps the argv[0] it was started with. A
-# login shell is started with a leading dash on argv[0] (for example -letteredolive), and the shell
-# uses that to tell a login session from one started by typing the command.
-exec -a "$0" python3 -W all -m shell "$@"
+# The venv's python runs directly, so it finds its own site-packages. a renamed argv[0] would set
+# this launcher's path, and python then drops the venv (sys.prefix falls back to /usr). The command
+# name is passed as --proc-name instead. A login shell is started with a leading dash on $0 (for
+# example -letteredolive), and the shell reads that to tell a login session from a typed command.
+exec /var/lib/zoid6/venv/bin/python -W all -m shell --proc-name "$0" "$@"
