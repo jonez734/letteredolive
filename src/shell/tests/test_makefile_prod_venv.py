@@ -19,10 +19,10 @@ def _dry(target, *extra):
 
 
 @pytest.mark.unit
-def test_default_prefix_is_the_zoid6_venv():
+def test_default_prefix_is_the_zoid6_account_venv():
     r = _dry("prod")
     assert r.returncode == 0, r.stderr
-    assert "/var/lib/zoid6/venv" in r.stdout
+    assert "/home/zoid6/venv" in r.stdout
 
 
 @pytest.mark.unit
@@ -30,7 +30,7 @@ def test_prefix_is_taken_from_deploy_prefix():
     r = _dry("prod", "DEPLOY_PREFIX=/var/lib/other/venv")
     assert r.returncode == 0, r.stderr
     assert "/var/lib/other/venv" in r.stdout
-    assert "/var/lib/zoid6/venv" not in r.stdout
+    assert "/home/zoid6/venv" not in r.stdout
 
 
 @pytest.mark.unit
