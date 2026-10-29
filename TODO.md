@@ -116,3 +116,38 @@ reset the idle timer, so an idle client cannot hold a port open.
 
 - Startup check that walks every command and confirms each module is installed
   and passes the loader check. Deferred by decision.
+
+---
+
+## [EMBED] Run letteredolive from another program (for example casino_client)
+
+Question: can casino start an LO shell in its own process, alongside a member's
+own LO shell? Current answer: not as it is. LO is written as a standalone program.
+
+Blockers, found in `src/shell/__main__.py` and `src/shell/lib.py`:
+
+- `main()` reads `sys.argv`, sets the kernel process name (`lib.set_proc_name`, a
+  `prctl` call), and decides login-shell state from `argv[0]`. These are process-wide,
+  so an embedded instance would rename the host process and misread its arguments.
+- `init_screen` sets the terminal scroll region for the whole screen and never resets
+  it, so a host prompt would inherit LO's margins.
+- `shell_login` and `_check_database` run before the command loop. An embedded instance
+  needs the caller to supply the login and the pool.
+- Module state (`_screen_initialized`, `_PROC_NAME`) is per process. Two LO instances in
+  one process share it, so they cannot be independent shells.
+
+Options:
+
+1. **Subprocess (recommended for casino).** casino_client launches LO as a child with
+   its own terminal. No change to LO's state model. Smallest change.
+2. **In-process `run(args, pool)`.** Split `main()` so the command loop takes its
+   arguments and pool from the caller; keep argv, process-name and connect steps in
+   `main()` only; make `init_screen` restore the margins on exit. A few hours. Does not
+   allow two independent shells in one process.
+3. **Instance state.** Move the shell's module globals into an instance object so several
+   LO shells can run in one process. Larger refactor of `src/shell/`.
+
+Decision needed: which option, and whether to do it in this project or leave it to the
+casino side.
+
+---
